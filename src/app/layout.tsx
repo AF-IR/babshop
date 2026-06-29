@@ -1,14 +1,14 @@
 import type { Metadata } from "next"
-import { Inter } from "next/font/google"
+import { Vazirmatn } from "next/font/google"
 import { NextIntlClientProvider } from "next-intl"
 import { getLocale, getMessages } from "next-intl/server"
 import { Toaster } from "sonner"
 import { siteConfig } from "@/lib/config"
 import "./globals.css"
 
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
+const vazir = Vazirmatn({
+  variable: "--font-vazir",
+  subsets: ["arabic", "latin"],
 })
 
 export const metadata: Metadata = {
@@ -53,8 +53,12 @@ export default async function RootLayout({
   const messages = await getMessages()
 
   return (
-    <html lang={locale} className={`${inter.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col bg-white">
+    <html
+      lang="fa"
+      dir="rtl"
+      className={`${vazir.variable} h-full antialiased`}
+    >
+      <body className="min-h-full flex flex-col bg-white font-sans">
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
