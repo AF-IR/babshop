@@ -8,9 +8,9 @@ import { StarRating } from "@/components/products/star-rating"
 import { formatPrice } from "@/lib/utils"
 import { PLACEHOLDER_IMAGE } from "@/lib/constants"
 import type { Product } from "@/types"
-import data from "@/data/products.json"
 
-const allProducts = data.products as Product[]
+
+
 
 const popularSearches = [
   "Headphones",
@@ -28,19 +28,34 @@ interface SearchModalProps {
 
 export function SearchModal({ isOpen, onClose }: SearchModalProps) {
   const [query, setQuery] = useState("")
+  const [results, setResults] = useState<Product[]>([])
+  const [loading, setLoading] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const modalRef = useRef<HTMLDivElement>(null)
+	useEffect(() => {
+	  if (!query.trim()) {
+	    setResults([])
+	    return
+	  }
 
-  const results = query.trim().length > 0
-    ? allProducts.filter(
-        (p) =>
-          p.status === "active" &&
-          (p.name.toLowerCase().includes(query.toLowerCase()) ||
-            p.description.toLowerCase().includes(query.toLowerCase()) ||
-            p.tags.some((t) => t.toLowerCase().includes(query.toLowerCase())))
-      ).slice(0, 6)
-    : []
+	  const timer = setTimeout(async () => {
+	    setLoading(true)
 
+	    try {
+	      const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`)
+	      const data = await res.json()
+	      setResults(data)
+	    } catch (e) {
+	      console.error(e)
+	      setResults([])
+	    }
+
+	    setLoading(false)
+	  }, 300)
+
+	  return () => clearTimeout(timer)
+	}, [query])
+  
   const handleClose = useCallback(() => {
     setQuery("")
     onClose()
