@@ -6,13 +6,12 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { AuthCardLayout } from "@/components/auth/auth-card-layout"
-import { useAuthStore } from "@/store/auth"
 import { toast } from "sonner"
 import { registerSchema } from "@/lib/validators"
+import { supabase } from "@/lib/supabase"
 
 export default function RegisterPage() {
   const router = useRouter()
-  const register = useAuthStore((s) => s.register)
   const [form, setForm] = useState({
     firstName: "", lastName: "", email: "", password: "", confirmPassword: "",
   })
@@ -25,12 +24,33 @@ export default function RegisterPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     const validation = registerSchema.safeParse(form)
-    if (!validation.success) { toast.error(validation.error.issues[0].message); return }
+    if (!validation.success) {
+      toast.error(validation.error.issues[0].message)
+      return
+    }
     setLoading(true)
-    const success = register({ firstName: form.firstName, lastName: form.lastName, email: form.email, password: form.password })
-    if (success) { toast.success("Account created!"); router.push("/account") }
-    else { toast.error("An account with this email already exists") }
+
+    const { error } = await supabase.auth.signUp({
+      email: form.email,
+      password: form.password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth/callback`, // ← اضافه شد
+        data: {
+          first_name: form.firstName,
+          last_name: form.lastName,
+        },
+      },
+    })
+
     setLoading(false)
+
+    if (error) {
+      toast.error(error.message)
+      return
+    }
+
+    toast.success("Account created. Check your email.")
+    router.push("/auth/login")
   }
 
   return (
