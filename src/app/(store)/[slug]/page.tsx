@@ -138,13 +138,9 @@ export default async function SlugPage({ params }: SlugPageProps) {
     // ==============================
 
     return (
-      <CategoryView
-        category={category}
-        products={products}
-        pagination={pagination}
-        subcategories={subcategories}
-        ancestors={ancestors}
-      />
+      <pre>
+        {JSON.stringify(products, null, 2)}
+      </pre>
     )
   }
 
