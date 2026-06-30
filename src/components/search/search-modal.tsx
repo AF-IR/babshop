@@ -9,9 +9,6 @@ import { formatPrice } from "@/lib/utils"
 import { PLACEHOLDER_IMAGE } from "@/lib/constants"
 import type { Product } from "@/types"
 
-
-
-
 const popularSearches = [
   "Headphones",
   "Coffee",
@@ -32,32 +29,40 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
   const [loading, setLoading] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const modalRef = useRef<HTMLDivElement>(null)
-	useEffect(() => {
-	  if (!query.trim()) {
-	    setResults([])
-	    return
-	  }
 
-	  const timer = setTimeout(async () => {
-	    setLoading(true)
+  useEffect(() => {
+    if (!query.trim()) {
+      setResults([])
+      setLoading(false)   // ← اصلاح ۱
+      return
+    }
 
-	    try {
-	      const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`)
-	      const data = await res.json()
-	      setResults(data)
-	    } catch (e) {
-	      console.error(e)
-	      setResults([])
-	    }
+    const timer = setTimeout(async () => {
+      setLoading(true)
 
-	    setLoading(false)
-	  }, 300)
+      try {
+        const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`)
+        
+        if (!res.ok) {   // ← اصلاح ۲
+          throw new Error("Search request failed")
+        }
 
-	  return () => clearTimeout(timer)
-	}, [query])
-  
+        const data = await res.json()
+        setResults(data)
+      } catch (e) {
+        console.error(e)
+        setResults([])
+      }
+
+      setLoading(false)
+    }, 300)
+
+    return () => clearTimeout(timer)
+  }, [query])
+
   const handleClose = useCallback(() => {
     setQuery("")
+    setResults([])
     onClose()
   }, [onClose])
 
@@ -142,7 +147,13 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
 
           {/* Results */}
           <div className="max-h-[60vh] overflow-y-auto">
-            {hasQuery && results.length > 0 && (
+            {loading && (
+              <div className="px-4 py-8 text-center text-sm text-muted-foreground">
+                Searching...
+              </div>
+            )}
+
+            {!loading && hasQuery && results.length > 0 && (
               <div className="p-2">
                 {results.map((product) => {
                   const variant = product.variants[0]
@@ -189,7 +200,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
               </div>
             )}
 
-            {hasQuery && results.length === 0 && (
+            {!loading && hasQuery && results.length === 0 && (
               <div className="px-4 py-12 text-center">
                 <p className="text-sm text-muted-foreground">
                   No results for &quot;{query}&quot;
