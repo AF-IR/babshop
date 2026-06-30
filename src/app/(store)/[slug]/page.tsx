@@ -15,7 +15,7 @@ interface SlugPageProps {
 // Only render slugs returned by generateStaticParams — any other slug
 // automatically gets a proper 404 response. Rebuild/redeploy to pick
 // up new products, categories, or brands.
-export const dynamicParams = false
+export const dynamicParams = true
 
 export async function generateStaticParams() {
   const productSlugs = data.products
