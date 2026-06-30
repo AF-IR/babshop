@@ -123,27 +123,23 @@ export default async function SlugPage({ params }: SlugPageProps) {
   // Check category
   const category = await categoryRepository.getBySlug(slug)
   if (category) {
-    // ===== تغییر موقت برای تست =====
-    // به جای getByCategory، از list() استفاده می‌کنیم تا همه محصولات را بگیریم
-    const test = await productRepository.list()
-    console.log("ALL PRODUCTS FROM list():", test.items.length)
-    console.log(test.items)
-
-    const products = test.items
-    const pagination = test.pagination
-
-    // همچنان زیرمجموعه‌ها و اجداد را می‌گیریم
-    const subcategories = await categoryRepository.getChildren(category.id)
-    const ancestors = await categoryRepository.getAncestors(category.id)
-    // ==============================
+    const [{ items: products, pagination }, subcategories, ancestors] =
+      await Promise.all([
+        productRepository.getByCategory(slug, { page: 1, limit: 40 }),
+        categoryRepository.getChildren(category.id),
+        categoryRepository.getAncestors(category.id),
+      ])
 
     return (
-      <pre>
-        {JSON.stringify(products, null, 2)}
-      </pre>
+      <CategoryView
+        category={category}
+        products={products}
+        pagination={pagination}
+        subcategories={subcategories}
+        ancestors={ancestors}
+      />
     )
   }
-
   // Check brand
   const brand = await brandRepository.getBySlug(slug)
   if (brand) {
