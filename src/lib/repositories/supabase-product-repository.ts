@@ -25,9 +25,9 @@ function mapProduct(p: any): Product {
     ],
 
     status: "active",
-
-    brandId: p.brand ?? "",
-
+    
+    brandId: p.brand_id ?? "",
+    
     categoryIds: p.category_id ? [p.category_id] : [],
 
     tags: p.tags ?? [],
