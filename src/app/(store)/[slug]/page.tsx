@@ -17,17 +17,6 @@ interface SlugPageProps {
 // up new products, categories, or brands.
 export const dynamicParams = true
 
-export async function generateStaticParams() {
-  const products = await productRepository.list()
-//    .filter((p) => p.status === "active")
-  //  .map((p) => ({ slug: p.slug }))
-  const categories = await categoryRepository.list()
-  const brandSlugs = (data as { brands?: { slug: string }[] }).brands?.map(
-    (b) => ({ slug: b.slug })
-  ) ?? []
-
-  return [...productSlugs, ...categorySlugs, ...brandSlugs]
-}
 
 export async function generateMetadata({
   params,
