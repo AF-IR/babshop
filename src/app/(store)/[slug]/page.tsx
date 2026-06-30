@@ -129,6 +129,13 @@ export default async function SlugPage({ params }: SlugPageProps) {
         categoryRepository.getChildren(category.id),
         categoryRepository.getAncestors(category.id),
       ])
+
+    // ===== اضافه شد =====
+    console.log("CATEGORY:", category.slug)
+    console.log("PRODUCT COUNT:", products.length)
+    console.log(products)
+    // ===================
+
     return (
       <CategoryView
         category={category}
