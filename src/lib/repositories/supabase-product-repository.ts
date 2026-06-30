@@ -1,27 +1,37 @@
+import type {
+  Product,
+  ProductRepository,
+  ProductFilters,
+  SortOption,
+  PaginationParams,
+  PaginatedResult,
+} from "@/types";
+
 import { supabase } from "@/lib/supabase";
 
-function mapProduct(p: any) {
+function mapProduct(p: any): Product {
   return {
     id: p.id,
     name: p.title,
     slug: p.slug,
-    description: p.description,
+    description: p.description ?? "",
     body: "",
     images: [
       {
-        url: p.image,
+        url: p.image ?? "",
         alt: p.title,
       },
     ],
     status: "active",
     brandId: "",
-    categoryIds: [],
+    categoryIds: p.category ? [p.category] : [],
     tags: [],
     rating: 5,
     reviewCount: 0,
-    featured: true,
-    createdAt: p.created_at ?? new Date().toISOString(),
-    updatedAt: p.created_at ?? new Date().toISOString(),
+    featured: false,
+    createdAt: p.created_at,
+    updatedAt: p.created_at,
+
     variants: [
       {
         id: p.id,
@@ -30,53 +40,116 @@ function mapProduct(p: any) {
         name: "Default",
         price: p.price,
         currency: "IRR",
+
         inventory: {
           quantity: p.stock,
           trackInventory: true,
           allowBackorder: false,
         },
+
         options: [],
-        images: [],
+
+        images: [
+          {
+            url: p.image ?? "",
+            alt: p.title,
+          },
+        ],
       },
     ],
   };
 }
 
-export const supabaseProductRepository = {
-  async list() {
-    const { data, error } = await supabase
+export const supabaseProductRepository: ProductRepository = {
+  async list(filters, sort, pagination) {
+    let query = supabase
       .from("products")
-      .select("*")
+      .select("*", { count: "exact" })
       .eq("published", true);
+
+    if (filters?.search) {
+      query = query.ilike("title", `%${filters.search}%`);
+    }
+
+    if (filters?.category) {
+      query = query.eq("category", filters.category);
+    }
+
+    if (sort?.field === "price") {
+      query = query.order("price", {
+        ascending: sort.order === "asc",
+      });
+    } else if (sort?.field === "createdAt") {
+      query = query.order("created_at", {
+        ascending: sort.order === "asc",
+      });
+    } else {
+      query = query.order("title");
+    }
+
+    const page = pagination?.page ?? 1;
+    const limit = pagination?.limit ?? 12;
+
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+
+    query = query.range(from, to);
+
+    const { data, error, count } = await query;
 
     if (error) {
       console.error(error);
+
       return {
         items: [],
         pagination: {
           total: 0,
-          page: 1,
-          limit: 12,
-          totalPages: 1,
+          page,
+          limit,
+          totalPages: 0,
           hasNext: false,
           hasPrev: false,
         },
       };
     }
 
-    const items = data.map(mapProduct);
-
     return {
-      items,
+      items: (data ?? []).map(mapProduct),
+
       pagination: {
-        total: items.length,
-        page: 1,
-        limit: 12,
-        totalPages: 1,
-        hasNext: false,
-        hasPrev: false,
+        total: count ?? 0,
+        page,
+        limit,
+        totalPages: Math.ceil((count ?? 0) / limit),
+        hasNext: page * limit < (count ?? 0),
+        hasPrev: page > 1,
       },
     };
+  },
+
+  async getBySlug(slug) {
+    const { data, error } = await supabase
+      .from("products")
+      .select("*")
+      .eq("slug", slug)
+      .eq("published", true)
+      .single();
+
+    if (error || !data) return null;
+
+    return mapProduct(data);
+  },
+
+  async getById(id) {
+    const { data, error } = await supabase
+      .from("products")
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    if (error || !data) return null;
+
+    return mapProduct(data);
   },
 
   async getFeatured(limit = 4) {
@@ -91,102 +164,60 @@ export const supabaseProductRepository = {
       return [];
     }
 
-    return data.map(mapProduct);
+    return (data ?? []).map(mapProduct);
   },
 
-  async getBySlug(slug: string) {
-    const { data, error } = await supabase
+  async getByCategory(categorySlug, pagination) {
+    const page = pagination?.page ?? 1;
+    const limit = pagination?.limit ?? 12;
+
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+
+    const { data, error, count } = await supabase
       .from("products")
-      .select("*")
-      .eq("slug", slug)
-      .single();
-
-    if (error || !data) return null;
-
-    return mapProduct(data);
-  },
-
-  async getById(id: string) {
-    const { data, error } = await supabase
-      .from("products")
-      .select("*")
-      .eq("id", id)
-      .single();
-
-    if (error || !data) return null;
-
-    return mapProduct(data);
-  },
-
-  async search(query: string) {
-    const { data, error } = await supabase
-      .from("products")
-      .select("*")
-      .ilike("title", `%${query}%`);
+      .select("*", { count: "exact" })
+      .eq("published", true)
+      .eq("category", categorySlug)
+      .range(from, to);
 
     if (error) {
       console.error(error);
+
       return {
         items: [],
         pagination: {
           total: 0,
-          page: 1,
-          limit: 12,
-          totalPages: 1,
+          page,
+          limit,
+          totalPages: 0,
           hasNext: false,
           hasPrev: false,
         },
       };
     }
 
-    const items = data.map(mapProduct);
-
     return {
-      items,
+      items: (data ?? []).map(mapProduct),
+
       pagination: {
-        total: items.length,
-        page: 1,
-        limit: 12,
-        totalPages: 1,
-        hasNext: false,
-        hasPrev: false,
+        total: count ?? 0,
+        page,
+        limit,
+        totalPages: Math.ceil((count ?? 0) / limit),
+        hasNext: page * limit < (count ?? 0),
+        hasPrev: page > 1,
       },
     };
   },
 
-  async getByCategory(category: string) {
-    const { data, error } = await supabase
-      .from("products")
-      .select("*")
-      .eq("category", category);
-
-    if (error) {
-      console.error(error);
-      return {
-        items: [],
-        pagination: {
-          total: 0,
-          page: 1,
-          limit: 12,
-          totalPages: 1,
-          hasNext: false,
-          hasPrev: false,
-        },
-      };
-    }
-
-    const items = data.map(mapProduct);
-
-    return {
-      items,
-      pagination: {
-        total: items.length,
-        page: 1,
-        limit: 12,
-        totalPages: 1,
-        hasNext: false,
-        hasPrev: false,
+  async search(queryText, pagination) {
+    return this.list(
+      {
+        search: queryText,
       },
-    };
+      undefined,
+      pagination
+    );
   },
 };
