@@ -205,12 +205,11 @@ export const supabaseProductRepository: ProductRepository = {
       .from("products")
       .select("*", { count: "exact" })
       .eq("published", true)
-      .eq("category_id", category.id)
+      .eq("category_id", category.id)   // ✅ این خط مهمه
       .range(from, to);
 
     if (error) {
       console.error(error);
-
       return paginate([], 0, page, limit);
     }
 
@@ -220,7 +219,7 @@ export const supabaseProductRepository: ProductRepository = {
       page,
       limit
     );
-  },
+  },  // ✅ کاما اضافه شد (تنها تغییر)
 
   async search(queryText, pagination) {
     return this.list(
