@@ -185,12 +185,14 @@ export const supabaseProductRepository: ProductRepository = {
   },
 
   async getByCategory(categorySlug, pagination) {
+    console.log("CATEGORY SLUG =", categorySlug)
     const { data: category } = await supabase
       .from("categories")
       .select("id")
       .eq("slug", categorySlug)
       .single();
-
+    console.log("CATEGORY =", category)
+    
     if (!category) {
       return paginate([], 0, 1, 12);
     }
@@ -207,7 +209,8 @@ export const supabaseProductRepository: ProductRepository = {
       .eq("published", true)
       .eq("category_id", category.id)   // ✅ این خط مهمه
       .range(from, to);
-
+    console.log("PRODUCT COUNT =", count)
+    console.log(data)
     if (error) {
       console.error(error);
       return paginate([], 0, page, limit);
