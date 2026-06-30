@@ -202,7 +202,12 @@ export const supabaseProductRepository: ProductRepository = {
 
     const from = (page - 1) * limit;
     const to = from + limit - 1;
+    const all = await supabase
+      .from("products")
+      .select("title, category_id, published");
 
+    console.log("ALL PRODUCTS");
+    console.log(all.data);
     const { data, count, error } = await supabase
       .from("products")
       .select("*", { count: "exact" })
