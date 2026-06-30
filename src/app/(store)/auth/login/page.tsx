@@ -7,33 +7,43 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { AuthCardLayout } from "@/components/auth/auth-card-layout"
-import { useAuthStore } from "@/store/auth"
 import { toast } from "sonner"
 import { loginSchema } from "@/lib/validators"
+import { supabase } from "@/lib/supabase"
 
 export default function LoginPage() {
   const router = useRouter()
-  const login = useAuthStore((s) => s.login)
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+
     const result = loginSchema.safeParse({ email, password })
+
     if (!result.success) {
       toast.error(result.error.issues[0].message)
       return
     }
+
     setLoading(true)
-    const success = login(email, password)
-    if (success) {
-      toast.success("Welcome back!")
-      router.push("/account")
-    } else {
-      toast.error("Invalid email or password")
-    }
+
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    })
+
     setLoading(false)
+
+    if (error) {
+      toast.error(error.message)
+      return
+    }
+
+    toast.success("Welcome back!")
+    router.refresh() // ← اضافه شد تا سشن جدید شناسایی شود
+    router.push("/account")
   }
 
   return (
@@ -62,13 +72,6 @@ export default function LoginPage() {
           {loading ? "Signing in..." : "Sign In"}
         </Button>
       </form>
-      <div className="mt-4 rounded-md bg-neutral-50 p-3">
-        <p className="text-xs text-muted-foreground">
-          <strong>Demo accounts:</strong><br />
-          admin@example.com / password123<br />
-          demo@example.com / password123
-        </p>
-      </div>
     </AuthCardLayout>
   )
 }
