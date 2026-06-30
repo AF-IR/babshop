@@ -15,34 +15,46 @@ function mapProduct(p: any): Product {
     name: p.title,
     slug: p.slug,
     description: p.description ?? "",
-    body: "",
+    body: p.body ?? "",
+
     images: [
       {
-        url: p.image ?? "",
+        url: p.image || "https://placehold.co/600x600",
         alt: p.title,
       },
     ],
+
     status: "active",
-    brandId: "",
-    categoryIds: p.category ? [p.category] : [],
-    tags: [],
-    rating: 5,
-    reviewCount: 0,
-    featured: false,
+
+    brandId: p.brand ?? "",
+
+    categoryIds: p.category_id ? [p.category_id] : [],
+
+    tags: p.tags ?? [],
+
+    rating: Number(p.rating ?? 5),
+
+    reviewCount: Number(p.review_count ?? 0),
+
+    featured: p.featured ?? false,
+
     createdAt: p.created_at,
-    updatedAt: p.created_at,
+
+    updatedAt: p.updated_at ?? p.created_at,
 
     variants: [
       {
         id: p.id,
         productId: p.id,
-        sku: "",
+        sku: p.sku ?? "",
         name: "Default",
-        price: p.price,
-        currency: "IRR",
+
+        price: Number(p.price),
+
+        currency: "IRT",
 
         inventory: {
-          quantity: p.stock,
+          quantity: Number(p.stock ?? 0),
           trackInventory: true,
           allowBackorder: false,
         },
@@ -51,12 +63,35 @@ function mapProduct(p: any): Product {
 
         images: [
           {
-            url: p.image ?? "",
+            url: p.image || "https://placehold.co/600x600",
             alt: p.title,
           },
         ],
       },
     ],
+  };
+}
+
+function paginate(
+  items: Product[],
+  total: number,
+  page: number,
+  limit: number
+): PaginatedResult<Product> {
+  return {
+    items,
+
+    pagination: {
+      total,
+      page,
+      limit,
+
+      totalPages: Math.ceil(total / limit),
+
+      hasNext: page * limit < total,
+
+      hasPrev: page > 1,
+    },
   };
 }
 
@@ -72,19 +107,25 @@ export const supabaseProductRepository: ProductRepository = {
     }
 
     if (filters?.category) {
-      query = query.eq("category", filters.category);
+      const { data: cat } = await supabase
+        .from("categories")
+        .select("id")
+        .eq("slug", filters.category)
+        .single();
+
+      if (cat) {
+        query = query.eq("category_id", cat.id);
+      }
     }
 
     if (sort?.field === "price") {
       query = query.order("price", {
         ascending: sort.order === "asc",
       });
-    } else if (sort?.field === "createdAt") {
-      query = query.order("created_at", {
-        ascending: sort.order === "asc",
-      });
     } else {
-      query = query.order("title");
+      query = query.order("created_at", {
+        ascending: false,
+      });
     }
 
     const page = pagination?.page ?? 1;
@@ -100,115 +141,85 @@ export const supabaseProductRepository: ProductRepository = {
     if (error) {
       console.error(error);
 
-      return {
-        items: [],
-        pagination: {
-          total: 0,
-          page,
-          limit,
-          totalPages: 0,
-          hasNext: false,
-          hasPrev: false,
-        },
-      };
+      return paginate([], 0, page, limit);
     }
 
-    return {
-      items: (data ?? []).map(mapProduct),
-
-      pagination: {
-        total: count ?? 0,
-        page,
-        limit,
-        totalPages: Math.ceil((count ?? 0) / limit),
-        hasNext: page * limit < (count ?? 0),
-        hasPrev: page > 1,
-      },
-    };
+    return paginate(
+      (data ?? []).map(mapProduct),
+      count ?? 0,
+      page,
+      limit
+    );
   },
 
   async getBySlug(slug) {
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from("products")
       .select("*")
       .eq("slug", slug)
       .eq("published", true)
       .single();
 
-    if (error || !data) return null;
-
-    return mapProduct(data);
+    return data ? mapProduct(data) : null;
   },
 
   async getById(id) {
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from("products")
       .select("*")
       .eq("id", id)
       .single();
 
-    if (error || !data) return null;
-
-    return mapProduct(data);
+    return data ? mapProduct(data) : null;
   },
 
   async getFeatured(limit = 4) {
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from("products")
       .select("*")
       .eq("published", true)
+      .eq("featured", true)
       .limit(limit);
-
-    if (error) {
-      console.error(error);
-      return [];
-    }
 
     return (data ?? []).map(mapProduct);
   },
 
   async getByCategory(categorySlug, pagination) {
+    const { data: category } = await supabase
+      .from("categories")
+      .select("id")
+      .eq("slug", categorySlug)
+      .single();
+
+    if (!category) {
+      return paginate([], 0, 1, 12);
+    }
+
     const page = pagination?.page ?? 1;
     const limit = pagination?.limit ?? 12;
 
     const from = (page - 1) * limit;
     const to = from + limit - 1;
 
-    const { data, error, count } = await supabase
+    const { data, count, error } = await supabase
       .from("products")
       .select("*", { count: "exact" })
       .eq("published", true)
-      .eq("category", categorySlug)
+      .eq("category_id", category.id)
       .range(from, to);
 
     if (error) {
       console.error(error);
 
-      return {
-        items: [],
-        pagination: {
-          total: 0,
-          page,
-          limit,
-          totalPages: 0,
-          hasNext: false,
-          hasPrev: false,
-        },
-      };
+      return paginate([], 0, page, limit);
     }
 
-    return {
-      items: (data ?? []).map(mapProduct),
-
-      pagination: {
-        total: count ?? 0,
-        page,
-        limit,
-        totalPages: Math.ceil((count ?? 0) / limit),
-        hasNext: page * limit < (count ?? 0),
-        hasPrev: page > 1,
-      },
-    };
+    return paginate(
+      (data ?? []).map(mapProduct),
+      count ?? 0,
+      page,
+      limit
+    );
   },
 
   async search(queryText, pagination) {
