@@ -1,27 +1,23 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { useAuthStore } from "@/store/auth"
+import { useUser } from "./use-user"
 
 export function useAuthGuard() {
-  const user = useAuthStore((s) => s.user)
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const router = useRouter()
-  const [mounted, setMounted] = useState(false)
-
-  useEffect(() => setMounted(true), [])
+  const { user, loading, isAuthenticated } = useUser()
 
   useEffect(() => {
-    if (mounted && !isAuthenticated) {
-      router.push("/auth/login")
+    if (!loading && !isAuthenticated) {
+      router.replace("/auth/login")
     }
-  }, [mounted, isAuthenticated, router])
+  }, [loading, isAuthenticated, router])
 
   return {
     user,
     isAuthenticated,
-    isLoading: !mounted,
-    isReady: mounted && isAuthenticated,
+    isLoading: loading,
+    isReady: !loading && isAuthenticated,
   }
 }
