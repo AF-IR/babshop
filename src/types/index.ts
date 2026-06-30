@@ -146,7 +146,7 @@ export interface Category {
 
   description: string
 
-  image?: string
+  image?: ProductImage
 
   parentId?: string
 
