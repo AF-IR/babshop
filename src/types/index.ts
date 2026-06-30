@@ -1,8 +1,11 @@
 // ============================================================================
-// Core Ecommerce Types — Backend-Agnostic Data Contract
+// Core Ecommerce Types
+// Backend-Agnostic Data Contract
 // ============================================================================
 
-// --- Brand ---
+/* -------------------------------------------------------------------------- */
+/*                                   Brand                                    */
+/* -------------------------------------------------------------------------- */
 
 export interface Brand {
   id: string
@@ -11,21 +14,23 @@ export interface Brand {
   description: string
 }
 
-// --- CMS-style Pages ---
+/* -------------------------------------------------------------------------- */
+/*                                 CMS Pages                                  */
+/* -------------------------------------------------------------------------- */
 
 export interface CmsPage {
   id: string
   title: string
   slug: string
-  /** Short summary shown on the pages index */
   excerpt?: string
-  /** Full HTML content rendered with .blog-body prose */
   body: string
   publishedAt: string
   updatedAt?: string
 }
 
-// --- Blog Posts ---
+/* -------------------------------------------------------------------------- */
+/*                                 Blog Posts                                 */
+/* -------------------------------------------------------------------------- */
 
 export interface BlogPost {
   id: string
@@ -40,9 +45,14 @@ export interface BlogPost {
   updatedAt?: string
 }
 
-// --- Product ---
+/* -------------------------------------------------------------------------- */
+/*                                   Product                                  */
+/* -------------------------------------------------------------------------- */
 
-export type ProductStatus = "draft" | "active" | "archived"
+export type ProductStatus =
+  | "draft"
+  | "active"
+  | "archived"
 
 export interface ProductImage {
   url: string
@@ -52,8 +62,8 @@ export interface ProductImage {
 }
 
 export interface ProductOption {
-  name: string // e.g., "Color", "Size"
-  value: string // e.g., "Black", "M"
+  name: string
+  value: string
 }
 
 export interface VariantInventory {
@@ -65,80 +75,129 @@ export interface VariantInventory {
 export interface ProductVariant {
   id: string
   productId: string
+
   sku: string
   name: string
-  price: number // in cents
-  compareAtPrice?: number // original price for sale display
+
+  price: number
+  compareAtPrice?: number
+
   currency: string
+
   inventory: VariantInventory
+
   options: ProductOption[]
+
   images: ProductImage[]
+
   weight?: number
-  dimensions?: { length: number; width: number; height: number }
+
+  dimensions?: {
+    length: number
+    width: number
+    height: number
+  }
 }
 
 export interface Product {
   id: string
+
   name: string
+
   slug: string
-  /** Short blurb shown in the product info column (1–2 sentences) */
+
   description: string
-  /** Full HTML description shown below gallery/add-to-cart (.blog-body prose) */
+
   body?: string
+
   images: ProductImage[]
+
   status: ProductStatus
+
   brandId: string
+
   categoryIds: string[]
+
   tags: string[]
+
   variants: ProductVariant[]
+
   rating: number
+
   reviewCount: number
+
   featured: boolean
+
   createdAt: string
+
   updatedAt: string
 }
 
-// --- Category ---
+/* -------------------------------------------------------------------------- */
+/*                                  Category                                  */
+/* -------------------------------------------------------------------------- */
 
-export interface CategoryRepository {
-  list(): Promise<Category[]>
+export interface Category {
+  id: string
 
-  getBySlug(slug: string): Promise<Category | null>
+  name: string
 
-  getById(id: string): Promise<Category | null>
+  slug: string
 
-  getChildren(parentId: string): Promise<Category[]>
+  description: string
 
-  getTopLevel(): Promise<Category[]>
+  image?: string
 
-  getAncestors(categoryId: string): Promise<Category[]>
+  parentId?: string
+
+  order: number
 }
-// --- Cart ---
+
+/* -------------------------------------------------------------------------- */
+/*                                    Cart                                    */
+/* -------------------------------------------------------------------------- */
 
 export interface CartItem {
   id: string
+
   variantId: string
+
   productId: string
+
   name: string
+
   variantName: string
+
   image: ProductImage
+
   slug: string
+
   price: number
+
   quantity: number
+
   lineTotal: number
 }
 
 export interface Cart {
   id: string
+
   items: CartItem[]
+
   subtotal: number
+
   tax: number
+
   shipping: number
+
   total: number
+
   itemCount: number
 }
 
-// --- Order ---
+/* -------------------------------------------------------------------------- */
+/*                                   Orders                                   */
+/* -------------------------------------------------------------------------- */
 
 export type OrderStatus =
   | "pending"
@@ -157,108 +216,188 @@ export type PaymentStatus =
 
 export interface OrderLineItem {
   id: string
+
   productId: string
+
   variantId: string
+
   name: string
+
   variantName: string
+
   sku: string
+
   image: ProductImage
+
   price: number
+
   quantity: number
+
   total: number
 }
 
 export interface Order {
   id: string
+
   orderNumber: string
+
   userId?: string
+
   items: OrderLineItem[]
+
   status: OrderStatus
+
   paymentStatus: PaymentStatus
+
   subtotal: number
+
   tax: number
+
   shipping: number
+
   total: number
+
   currency: string
+
   shippingAddress: Address
+
   billingAddress?: Address
+
   customerEmail: string
+
   customerName: string
+
   createdAt: string
+
   updatedAt: string
 }
 
-// --- User ---
+/* -------------------------------------------------------------------------- */
+/*                                    User                                    */
+/* -------------------------------------------------------------------------- */
 
-export type UserRole = "customer" | "admin"
+export type UserRole =
+  | "customer"
+  | "admin"
 
 export interface User {
   id: string
+
   email: string
+
   firstName: string
+
   lastName: string
+
   role: UserRole
+
   addresses: Address[]
+
   createdAt: string
+
   updatedAt: string
 }
 
-// --- Address ---
+/* -------------------------------------------------------------------------- */
+/*                                  Address                                   */
+/* -------------------------------------------------------------------------- */
 
-export type AddressType = "shipping" | "billing"
+export type AddressType =
+  | "shipping"
+  | "billing"
 
 export interface Address {
   id: string
+
   type: AddressType
+
   firstName: string
+
   lastName: string
+
   line1: string
+
   line2?: string
+
   city: string
+
   state: string
+
   postalCode: string
+
   country: string
+
   phone?: string
+
   isDefault: boolean
 }
 
-// --- Payment ---
+/* -------------------------------------------------------------------------- */
+/*                                  Payment                                   */
+/* -------------------------------------------------------------------------- */
 
-export type PaymentMethod = "card" | "bank_transfer" | "wallet" | "other"
+export type PaymentMethod =
+  | "card"
+  | "bank_transfer"
+  | "wallet"
+  | "other"
 
 export interface Payment {
   id: string
+
   orderId: string
+
   method: PaymentMethod
+
   status: PaymentStatus
+
   amount: number
+
   currency: string
+
   transactionId?: string
+
   metadata?: Record<string, string>
 }
 
-// --- Review (placeholder for v2) ---
+/* -------------------------------------------------------------------------- */
+/*                                   Review                                   */
+/* -------------------------------------------------------------------------- */
 
 export interface Review {
   id: string
+
   productId: string
+
   userId: string
-  rating: number // 1-5
+
+  rating: number
+
   title: string
+
   content: string
+
   verified: boolean
+
   createdAt: string
 }
-
 // ============================================================================
 // Infrastructure Types
 // ============================================================================
 
-// --- API Response ---
+/* -------------------------------------------------------------------------- */
+/*                                API Response                                */
+/* -------------------------------------------------------------------------- */
 
 export type ApiResponse<T> =
-  | { data: T; error?: never }
-  | { data?: never; error: ApiError }
+  | {
+      data: T
+      error?: never
+    }
+  | {
+      data?: never
+      error: ApiError
+    }
 
 export interface ApiError {
   code: string
@@ -267,7 +406,9 @@ export interface ApiError {
   details?: Record<string, string[]>
 }
 
-// --- Pagination ---
+/* -------------------------------------------------------------------------- */
+/*                                 Pagination                                 */
+/* -------------------------------------------------------------------------- */
 
 export interface PaginationParams {
   page: number
@@ -288,7 +429,9 @@ export interface PaginatedResult<T> {
   pagination: PaginationMeta
 }
 
-// --- Filtering & Sorting ---
+/* -------------------------------------------------------------------------- */
+/*                              Filtering / Sort                              */
+/* -------------------------------------------------------------------------- */
 
 export type SortOrder = "asc" | "desc"
 
@@ -310,7 +453,9 @@ export interface ProductFilters {
   tags?: string[]
 }
 
-// --- Checkout Provider ---
+/* -------------------------------------------------------------------------- */
+/*                             Checkout Provider                              */
+/* -------------------------------------------------------------------------- */
 
 export interface CheckoutSession {
   id: string
@@ -329,16 +474,23 @@ export interface WebhookResult {
 export interface CheckoutProvider {
   createSession(
     cart: Cart,
-    customer?: { email: string; shippingAddress?: Address }
+    customer?: {
+      email: string
+      shippingAddress?: Address
+    }
   ): Promise<CheckoutSession>
+
   getSession(sessionId: string): Promise<CheckoutSession>
+
   handleWebhook(
     payload: unknown,
     signature: string
   ): Promise<WebhookResult>
 }
 
-// --- Data Repository Interfaces ---
+/* -------------------------------------------------------------------------- */
+/*                              Repository Types                              */
+/* -------------------------------------------------------------------------- */
 
 export interface ProductRepository {
   list(
@@ -346,13 +498,18 @@ export interface ProductRepository {
     sort?: SortOption,
     pagination?: PaginationParams
   ): Promise<PaginatedResult<Product>>
+
   getBySlug(slug: string): Promise<Product | null>
+
   getById(id: string): Promise<Product | null>
+
   getFeatured(limit?: number): Promise<Product[]>
+
   getByCategory(
     categorySlug: string,
     pagination?: PaginationParams
   ): Promise<PaginatedResult<Product>>
+
   search(
     query: string,
     pagination?: PaginationParams
@@ -361,8 +518,45 @@ export interface ProductRepository {
 
 export interface CategoryRepository {
   list(): Promise<Category[]>
+
   getBySlug(slug: string): Promise<Category | null>
+
   getById(id: string): Promise<Category | null>
+
+  getChildren(parentId: string): Promise<Category[]>
+
+  getTopLevel(): Promise<Category[]>
+
+  getAncestors(categoryId: string): Promise<Category[]>
+}
+
+export interface BrandRepository {
+  list(): Promise<Brand[]>
+
+  getBySlug(slug: string): Promise<Brand | null>
+
+  getById(id: string): Promise<Brand | null>
+}
+
+export interface PageRepository {
+  list(): Promise<CmsPage[]>
+
+  getBySlug(slug: string): Promise<CmsPage | null>
+
+  getById(id: string): Promise<CmsPage | null>
+}
+
+export interface BlogRepository {
+  list(
+    params?: PaginationParams
+  ): Promise<PaginatedResult<BlogPost>>
+
+  getBySlug(slug: string): Promise<BlogPost | null>
+
+  getByTag(
+    tag: string,
+    params?: PaginationParams
+  ): Promise<PaginatedResult<BlogPost>>
 }
 
 export interface OrderRepository {
@@ -370,7 +564,15 @@ export interface OrderRepository {
     userId?: string,
     pagination?: PaginationParams
   ): Promise<PaginatedResult<Order>>
+
   getById(id: string): Promise<Order | null>
-  create(order: Omit<Order, "id" | "createdAt" | "updatedAt">): Promise<Order>
-  updateStatus(id: string, status: OrderStatus): Promise<Order>
+
+  create(
+    order: Omit<Order, "id" | "createdAt" | "updatedAt">
+  ): Promise<Order>
+
+  updateStatus(
+    id: string,
+    status: OrderStatus
+  ): Promise<Order>
 }
