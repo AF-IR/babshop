@@ -18,10 +18,10 @@ interface SlugPageProps {
 export const dynamicParams = true
 
 export async function generateStaticParams() {
-  const productSlugs = data.products
+  const products = await productRepository.list()
     .filter((p) => p.status === "active")
     .map((p) => ({ slug: p.slug }))
-  const categorySlugs = data.categories.map((c) => ({ slug: c.slug }))
+  const categories = await categoryRepository.list()
   const brandSlugs = (data as { brands?: { slug: string }[] }).brands?.map(
     (b) => ({ slug: b.slug })
   ) ?? []
