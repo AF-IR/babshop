@@ -49,15 +49,26 @@ export function ProductDetailView({
 
   const addToCart = useCartStore((s) => s.addItem)
   const openCart = useCartStore((s) => s.openCart)
+
+  // ===== تغییرات مربوط به Wishlist =====
   const wishlistItems = useWishlistStore((s) => s.items)
+  const loadWishlist = useWishlistStore((s) => s.load)
   const addToWishlist = useWishlistStore((s) => s.addItem)
   const removeFromWishlist = useWishlistStore((s) => s.removeItem)
 
   const addRecentlyViewed = useRecentlyViewedStore((s) => s.addItem)
 
   const [mounted, setMounted] = useState(false)
-  useEffect(() => setMounted(true), [])
-  const isWishlisted = mounted && wishlistItems.some((i) => i.productId === product.id)
+
+  useEffect(() => {
+    setMounted(true)
+    loadWishlist() // بارگذاری اولیه از localStorage
+  }, [loadWishlist])
+
+  // === تغییر خط isWishlisted ===
+  const isWishlisted =
+    mounted && wishlistItems.includes(product.id)
+  // ==================================
 
   // Track recently viewed
   useEffect(() => {
@@ -97,21 +108,22 @@ export function ProductDetailView({
     openCart()
   }
 
-  function handleToggleWishlist() {
-    if (isWishlisted) {
-      removeFromWishlist(product.id)
-      toast("Removed from wishlist")
-    } else {
-      addToWishlist({
-        productId: product.id,
-        name: product.name,
-        slug: product.slug,
-        price: selectedVariant!.price,
-        image: product.images[0] ?? { url: "", alt: product.name },
-      })
-      toast.success("Added to wishlist")
+  // ===== تابع جدید wishlist با async/await و مدیریت خطا =====
+  async function handleToggleWishlist() {
+    try {
+      if (isWishlisted) {
+        await removeFromWishlist(product.id)
+        toast.success("Removed from wishlist")
+      } else {
+        await addToWishlist(product.id) // فقط ID محصول را پاس می‌دهیم
+        toast.success("Added to wishlist")
+      }
+    } catch (err) {
+      console.error(err)
+      toast.error("Operation failed")
     }
   }
+  // ==========================================================
 
   const breadcrumbLd = breadcrumbJsonLd([
     { name: "Shop", href: "/shop" },
