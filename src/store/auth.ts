@@ -11,7 +11,7 @@ interface AuthState {
 
   login: (email: string, password: string) => Promise<boolean>
   register: (data: { firstName: string; lastName: string; email: string; password: string }) => Promise<boolean>
-  logout: () => void
+  logout: () => Promise<void>
   updateProfile: (data: Partial<Pick<User, "firstName" | "lastName" | "email">>) => void
   addAddress: (address: Omit<Address, "id">) => void
   removeAddress: (id: string) => void
@@ -44,7 +44,13 @@ export const useAuthStore = create<AuthState>()(
         return true
       },
 
-      logout: () => set({ user: null, isAuthenticated: false }),
+      logout: async () => {
+        await signOut()
+        set({
+          user: null,
+          isAuthenticated: false,
+        })
+      },
 
       updateProfile: (data) => {
         const user = get().user
