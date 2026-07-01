@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -10,14 +10,16 @@ import { PageHeader } from "@/components/ui/page-header"
 import { EmptyState } from "@/components/ui/empty-state"
 import { MapPin, Plus, Trash2 } from "lucide-react"
 import { useAuthGuard } from "@/hooks/use-auth-guard"
-import { useAuthStore } from "@/store/auth"
 import { toast } from "sonner"
 import type { Address } from "@/types"
+import {
+  getAddresses,
+  addAddress,
+  removeAddress,
+} from "@/lib/addresses"
 
 export default function AddressesPage() {
   const { user, isReady } = useAuthGuard()
-  const addAddress = useAuthStore((s) => s.addAddress)
-  const removeAddress = useAuthStore((s) => s.removeAddress)
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState({
     firstName: "", lastName: "", line1: "", line2: "",
@@ -49,11 +51,7 @@ export default function AddressesPage() {
     setForm({ firstName: "", lastName: "", line1: "", line2: "", city: "", state: "", postalCode: "", country: "US" })
   }
 
-
-  // ...
-
   const addresses: Address[] = user?.addresses ?? []
-  
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6 lg:px-8">
