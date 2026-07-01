@@ -3,7 +3,7 @@
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
 import type { User, Address } from "@/types"
-import { signIn, signUp, signOut, getUser } from "@/lib/auth"
+import { signIn, signUp, signOut } from "@/lib/auth"
 
 interface AuthState {
   user: User | null
@@ -25,22 +25,58 @@ export const useAuthStore = create<AuthState>()(
 
       login: async (email, password) => {
         const { data, error } = await signIn(email, password)
+
         if (error || !data.user) {
           return false
         }
+
+        const user: User = {
+          id: data.user.id,
+          email: data.user.email ?? "",
+          firstName: data.user.user_metadata?.firstName ?? "",
+          lastName: data.user.user_metadata?.lastName ?? "",
+          role: "customer",
+          addresses: [],
+          createdAt: data.user.created_at,
+          updatedAt: data.user.updated_at ?? data.user.created_at,
+        }
+
+        set({
+          user,
+          isAuthenticated: true,
+        })
+
         return true
       },
 
       register: async (data) => {
-        const { error } = await signUp(
+        const { data: signUpData, error } = await signUp(
           data.email,
           data.password,
           data.firstName,
           data.lastName
         )
-        if (error) {
+
+        if (error || !signUpData.user) {
           return false
         }
+
+        const user: User = {
+          id: signUpData.user.id,
+          email: signUpData.user.email ?? "",
+          firstName: data.firstName,
+          lastName: data.lastName,
+          role: "customer",
+          addresses: [],
+          createdAt: signUpData.user.created_at,
+          updatedAt: signUpData.user.updated_at ?? signUpData.user.created_at,
+        }
+
+        set({
+          user,
+          isAuthenticated: true,
+        })
+
         return true
       },
 
