@@ -50,7 +50,7 @@ export function ProductDetailView({
   const addToCart = useCartStore((s) => s.addItem)
   const openCart = useCartStore((s) => s.openCart)
 
-  // ===== تغییرات مربوط به Wishlist =====
+  // Wishlist
   const wishlistItems = useWishlistStore((s) => s.items)
   const loadWishlist = useWishlistStore((s) => s.load)
   const addToWishlist = useWishlistStore((s) => s.addItem)
@@ -60,15 +60,22 @@ export function ProductDetailView({
 
   const [mounted, setMounted] = useState(false)
 
+  // ===== اصلاح ۲: useEffect با await =====
   useEffect(() => {
     setMounted(true)
-    loadWishlist() // بارگذاری اولیه از localStorage
-  }, [loadWishlist])
 
-  // === تغییر خط isWishlisted ===
+    async function init() {
+      await loadWishlist()
+    }
+
+    init()
+  }, [loadWishlist])
+  // ======================================
+
+  // ===== اصلاح ۱: isWishlisted با includes (درست است) =====
   const isWishlisted =
     mounted && wishlistItems.includes(product.id)
-  // ==================================
+  // ======================================================
 
   // Track recently viewed
   useEffect(() => {
@@ -108,14 +115,14 @@ export function ProductDetailView({
     openCart()
   }
 
-  // ===== تابع جدید wishlist با async/await و مدیریت خطا =====
+  // ===== اصلاح ۳: تابع async با مدیریت خطا =====
   async function handleToggleWishlist() {
     try {
       if (isWishlisted) {
         await removeFromWishlist(product.id)
         toast.success("Removed from wishlist")
       } else {
-        await addToWishlist(product.id) // فقط ID محصول را پاس می‌دهیم
+        await addToWishlist(product.id)
         toast.success("Added to wishlist")
       }
     } catch (err) {
@@ -123,7 +130,7 @@ export function ProductDetailView({
       toast.error("Operation failed")
     }
   }
-  // ==========================================================
+  // =============================================
 
   const breadcrumbLd = breadcrumbJsonLd([
     { name: "Shop", href: "/shop" },
@@ -160,7 +167,6 @@ export function ProductDetailView({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify([jsonLd, breadcrumbLd]) }}
       />
-      {/* Breadcrumb — shows category ancestry; product name is in the H1 below */}
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
@@ -186,12 +192,9 @@ export function ProductDetailView({
         </BreadcrumbList>
       </Breadcrumb>
 
-      {/* Product */}
       <div className="mt-2 grid gap-8 lg:grid-cols-2 lg:gap-16">
-        {/* Gallery */}
         <ProductGallery images={product.images} productName={product.name} />
 
-        {/* Info */}
         <div className="flex flex-col">
           <div>
             <StarRating rating={product.rating} reviewCount={product.reviewCount} />
@@ -237,7 +240,6 @@ export function ProductDetailView({
 
           <p className="mt-4 text-muted-foreground">{product.description}</p>
 
-          {/* Variants */}
           {product.variants.length > 1 && (
             <div className="mt-6 mb-6">
               <VariantSelector
@@ -248,7 +250,6 @@ export function ProductDetailView({
             </div>
           )}
 
-          {/* Quantity + Add to Cart */}
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
             <div className="flex items-center gap-4">
               <QuantitySelector
@@ -288,7 +289,6 @@ export function ProductDetailView({
         </div>
       </div>
 
-      {/* Full HTML description (below gallery/add-to-cart) */}
       {product.body && (
         <section className="mt-16 border-t pt-12">
           <div className="mx-auto max-w-3xl">
@@ -300,7 +300,6 @@ export function ProductDetailView({
         </section>
       )}
 
-      {/* Related products */}
       {relatedProducts.length > 0 && (
         <section className="mt-16">
           <h2 className="text-xl font-bold tracking-tight">
@@ -312,7 +311,6 @@ export function ProductDetailView({
         </section>
       )}
 
-      {/* Recently viewed */}
       <RecentlyViewed excludeProductId={product.id} />
     </div>
   )
