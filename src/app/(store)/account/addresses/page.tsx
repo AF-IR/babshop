@@ -12,6 +12,7 @@ import { MapPin, Plus, Trash2 } from "lucide-react"
 import { useAuthGuard } from "@/hooks/use-auth-guard"
 import { useAuthStore } from "@/store/auth"
 import { toast } from "sonner"
+import type { Address } from "@/types"
 
 export default function AddressesPage() {
   const { user, isReady } = useAuthGuard()
@@ -48,7 +49,6 @@ export default function AddressesPage() {
     setForm({ firstName: "", lastName: "", line1: "", line2: "", city: "", state: "", postalCode: "", country: "US" })
   }
 
-  import type { Address } from "@/types"
 
   // ...
 
