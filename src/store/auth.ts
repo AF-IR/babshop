@@ -28,16 +28,16 @@ export const useAuthStore = create<AuthState>()(
         if (error || !data.user) {
           return false
         }
-        // تبدیل user از Supabase به نوع User خودمان (در صورت نیاز)
-        // فعلاً فقط true برگردان، بعداً mapping انجام می‌شود
         return true
       },
 
       register: async (data) => {
-        const { error } = await signUp(data.email, data.password, {
-          first_name: data.firstName,
-          last_name: data.lastName,
-        })
+        const { error } = await signUp(
+          data.email,
+          data.password,
+          data.firstName,
+          data.lastName
+        )
         if (error) {
           return false
         }
