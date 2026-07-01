@@ -20,6 +20,10 @@ export default function SettingsPage() {
   const [lastName, setLastName] = useState("")
   const [email, setEmail] = useState("")
 
+  const [currentPassword, setCurrentPassword] = useState("")
+  const [newPassword, setNewPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
+
   useEffect(() => {
     if (user) {
       setFirstName(user.firstName)
@@ -48,6 +52,35 @@ export default function SettingsPage() {
 
     toast.success("Profile updated")
     router.refresh()
+  }
+
+  async function handlePasswordChange(e: React.FormEvent) {
+    e.preventDefault()
+
+    if (newPassword !== confirmPassword) {
+      toast.error("Passwords do not match")
+      return
+    }
+
+    if (newPassword.length < 6) {
+      toast.error("Password must be at least 6 characters")
+      return
+    }
+
+    const { error } = await supabase.auth.updateUser({
+      password: newPassword,
+    })
+
+    if (error) {
+      toast.error(error.message)
+      return
+    }
+
+    setCurrentPassword("")
+    setNewPassword("")
+    setConfirmPassword("")
+
+    toast.success("Password updated successfully")
   }
 
   return (
@@ -86,18 +119,33 @@ export default function SettingsPage() {
           <CardTitle>Change Password</CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={(e) => { e.preventDefault(); toast.success("Password updated (demo)") }} className="space-y-4">
+          <form onSubmit={handlePasswordChange} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="currentPassword">Current password</Label>
-              <Input id="currentPassword" type="password" />
+              <Input
+                id="currentPassword"
+                type="password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="newPassword">New password</Label>
-              <Input id="newPassword" type="password" />
+              <Input
+                id="newPassword"
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="confirmPassword">Confirm new password</Label>
-              <Input id="confirmPassword" type="password" />
+              <Input
+                id="confirmPassword"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+              />
             </div>
             <Button type="submit">Update Password</Button>
           </form>
