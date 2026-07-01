@@ -19,7 +19,7 @@ import {
 } from "@/lib/addresses"
 
 export default function AddressesPage() {
-  const { isReady } = useAuthGuard()  // user حذف شد
+  const { isReady } = useAuthGuard()
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState({
     firstName: "", lastName: "", line1: "", line2: "",
@@ -27,12 +27,7 @@ export default function AddressesPage() {
   })
   const [addresses, setAddresses] = useState<Address[]>([])
 
-  if (!isReady) return null
-
-  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setForm((f) => ({ ...f, [e.target.name]: e.target.value }))
-  }
-
+  // همه هوک‌ها قبل از return شرطی
   useEffect(() => {
     if (!isReady) return
 
@@ -48,9 +43,13 @@ export default function AddressesPage() {
     loadAddresses()
   }, [isReady])
 
-  // ------------------------------------------------------------
-  // ۱- تابع handleAdd به‌روزرسانی شد (async با try/catch و به‌روزرسانی state)
-  // ------------------------------------------------------------
+  // حالا شرط خروج بعد از تمام هوک‌ها
+  if (!isReady) return null
+
+  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setForm((f) => ({ ...f, [e.target.name]: e.target.value }))
+  }
+
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault()
 
@@ -158,9 +157,6 @@ export default function AddressesPage() {
                     {addr.city}, {addr.state} {addr.postalCode}
                   </p>
                 </div>
-                {/* ------------------------------------------------------------
-                    ۲- دکمه حذف به‌روزرسانی شد (async با try/catch و به‌روزرسانی state)
-                ------------------------------------------------------------ */}
                 <Button
                   variant="ghost"
                   size="icon"
