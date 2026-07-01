@@ -25,31 +25,42 @@ export function ProductCard({ product }: ProductCardProps) {
   const isOnSale = compareAtPrice && compareAtPrice > price
   const image = product.images[0]
 
+  // ===== تغییرات بخش ۳ =====
   const wishlistItems = useWishlistStore((s) => s.items)
+  const load = useWishlistStore((s) => s.load)
   const addItem = useWishlistStore((s) => s.addItem)
   const removeItem = useWishlistStore((s) => s.removeItem)
 
   const [mounted, setMounted] = useState(false)
-  useEffect(() => setMounted(true), [])
-  const isWishlisted = mounted && wishlistItems.some((i) => i.productId === product.id)
 
-  function handleWishlist(e: React.MouseEvent) {
+  useEffect(() => {
+    setMounted(true)
+    load()
+  }, [load])
+
+  const isWishlisted =
+    mounted && wishlistItems.includes(product.id)
+  // ===== پایان تغییرات بخش ۳ =====
+
+  // ===== تغییرات بخش ۴ =====
+  async function handleWishlist(e: React.MouseEvent) {
     e.preventDefault()
     e.stopPropagation()
-    if (isWishlisted) {
-      removeItem(product.id)
-      toast("Removed from wishlist")
-    } else {
-      addItem({
-        productId: product.id,
-        name: product.name,
-        slug: product.slug,
-        price,
-        image: image ?? { url: PLACEHOLDER_IMAGE, alt: product.name },
-      })
-      toast.success("Added to wishlist")
+
+    try {
+      if (isWishlisted) {
+        await removeItem(product.id)
+        toast.success("Removed from wishlist")
+      } else {
+        await addItem(product.id)
+        toast.success("Added to wishlist")
+      }
+    } catch (err) {
+      console.error(err)
+      toast.error("Operation failed")
     }
   }
+  // ===== پایان تغییرات بخش ۴ =====
 
   return (
     <Link href={`/${product.slug}`} className="group">
