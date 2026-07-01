@@ -52,7 +52,8 @@ export default function AddressesPage() {
 
   // ...
 
-  const addresses: Address[] = []
+  const addresses: Address[] = user?.addresses ?? []
+  
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6 lg:px-8">
