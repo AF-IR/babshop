@@ -206,6 +206,7 @@ export function Header({ categories = [] }: HeaderProps) {
                   <DropdownMenuItem
                     onClick={async () => {
                       await supabase.auth.signOut()
+                      router.refresh()
                       router.push("/")
                     }}
                   >
