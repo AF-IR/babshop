@@ -1,141 +1,135 @@
-"use client"
-
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Badge } from "@/components/ui/badge"
-import { PageHeader } from "@/components/ui/page-header"
-import { EmptyState } from "@/components/ui/empty-state"
-import { MapPin, Plus, Trash2 } from "lucide-react"
-import { useAuthGuard } from "@/hooks/use-auth-guard"
-import { useAuthStore } from "@/store/auth"
-import { toast } from "sonner"
+import { supabase } from "@/lib/supabase"
 import type { Address } from "@/types"
 
-export default function AddressesPage() {
-  const { user, isReady } = useAuthGuard()
-  const addAddress = useAuthStore((s) => s.addAddress)
-  const removeAddress = useAuthStore((s) => s.removeAddress)
-  const [showForm, setShowForm] = useState(false)
-  const [form, setForm] = useState({
-    firstName: "", lastName: "", line1: "", line2: "",
-    city: "", state: "", postalCode: "", country: "US",
-  })
+/**
+ * دریافت تمام آدرس‌های کاربر جاری
+ */
+export async function getAddresses(): Promise<Address[]> {
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser()
 
-  if (!isReady) return null
-
-  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setForm((f) => ({ ...f, [e.target.name]: e.target.value }))
+  if (userError || !user) {
+    throw new Error("User not authenticated")
   }
 
-  function handleAdd(e: React.FormEvent) {
-    e.preventDefault()
-    addAddress({
-      type: "shipping",
-      firstName: form.firstName,
-      lastName: form.lastName,
-      line1: form.line1,
-      line2: form.line2 || undefined,
-      city: form.city,
-      state: form.state,
-      postalCode: form.postalCode,
-      country: form.country,
-      isDefault: (user?.addresses.length ?? 0) === 0,
+  const { data, error } = await supabase
+    .from("addresses")
+    .select("*")
+    .eq("user_id", user.id)
+    .order("is_default", { ascending: false })
+    .order("created_at", { ascending: true })
+
+  if (error) {
+    console.error("Error fetching addresses:", error)
+    throw new Error("Failed to fetch addresses")
+  }
+
+  // تبدیل رکوردهای دیتابیس به نوع Address
+  return (data || []).map((row) => ({
+    id: row.id,
+    type: row.type,
+    firstName: row.first_name,
+    lastName: row.last_name,
+    line1: row.line1,
+    line2: row.line2 || undefined,
+    city: row.city,
+    state: row.state,
+    postalCode: row.postal_code,
+    country: row.country,
+    isDefault: row.is_default,
+  }))
+}
+
+/**
+ * افزودن آدرس جدید برای کاربر جاری
+ */
+export async function addAddress(
+  addressData: Omit<Address, "id">
+): Promise<Address> {
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser()
+
+  if (userError || !user) {
+    throw new Error("User not authenticated")
+  }
+
+  const { data, error } = await supabase
+    .from("addresses")
+    .insert({
+      user_id: user.id,
+      type: addressData.type,
+      first_name: addressData.firstName,
+      last_name: addressData.lastName,
+      line1: addressData.line1,
+      line2: addressData.line2 || null,
+      city: addressData.city,
+      state: addressData.state,
+      postal_code: addressData.postalCode,
+      country: addressData.country,
+      is_default: addressData.isDefault ?? false,
     })
-    toast.success("Address added")
-    setShowForm(false)
-    setForm({ firstName: "", lastName: "", line1: "", line2: "", city: "", state: "", postalCode: "", country: "US" })
+    .select()
+    .single()
+
+  if (error) {
+    console.error("Error adding address:", error)
+    throw new Error("Failed to add address")
   }
 
+  return {
+    id: data.id,
+    type: data.type,
+    firstName: data.first_name,
+    lastName: data.last_name,
+    line1: data.line1,
+    line2: data.line2 || undefined,
+    city: data.city,
+    state: data.state,
+    postalCode: data.postal_code,
+    country: data.country,
+    isDefault: data.is_default,
+  }
+}
 
-  // ...
+/**
+ * حذف آدرس با شناسه مشخص (فقط در صورتی که متعلق به کاربر جاری باشد)
+ */
+export async function removeAddress(id: string): Promise<void> {
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser()
 
-  const addresses: Address[] = user?.addresses ?? []
-  
+  if (userError || !user) {
+    throw new Error("User not authenticated")
+  }
 
-  return (
-    <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6 lg:px-8">
-      <PageHeader title="Addresses">
-        <Button onClick={() => setShowForm(!showForm)}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add Address
-        </Button>
-      </PageHeader>
+  // ابتدا بررسی می‌کنیم که آدرس متعلق به کاربر است
+  const { data: address, error: fetchError } = await supabase
+    .from("addresses")
+    .select("user_id")
+    .eq("id", id)
+    .single()
 
-      {showForm && (
-        <Card className="mt-6">
-          <CardContent className="pt-6">
-            <form onSubmit={handleAdd} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>First name</Label>
-                  <Input name="firstName" value={form.firstName} onChange={handleChange} required />
-                </div>
-                <div className="space-y-2">
-                  <Label>Last name</Label>
-                  <Input name="lastName" value={form.lastName} onChange={handleChange} required />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label>Address</Label>
-                <Input name="line1" value={form.line1} onChange={handleChange} required />
-              </div>
-              <div className="space-y-2">
-                <Label>Apt, suite (optional)</Label>
-                <Input name="line2" value={form.line2} onChange={handleChange} />
-              </div>
-              <div className="grid grid-cols-3 gap-4">
-                <div className="space-y-2"><Label>City</Label><Input name="city" value={form.city} onChange={handleChange} required /></div>
-                <div className="space-y-2"><Label>State</Label><Input name="state" value={form.state} onChange={handleChange} required /></div>
-                <div className="space-y-2"><Label>ZIP</Label><Input name="postalCode" value={form.postalCode} onChange={handleChange} required /></div>
-              </div>
-              <div className="flex gap-2">
-                <Button type="submit">Save Address</Button>
-                <Button type="button" variant="outline" onClick={() => setShowForm(false)}>Cancel</Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
-      )}
+  if (fetchError || !address) {
+    throw new Error("Address not found")
+  }
 
-      {addresses.length === 0 && !showForm && (
-        <EmptyState
-          icon={MapPin}
-          title="No saved addresses"
-          description="Add an address to speed up checkout."
-        />
-      )}
+  if (address.user_id !== user.id) {
+    throw new Error("You don't have permission to delete this address")
+  }
 
-      {addresses.length > 0 && (
-        <div className="mt-8 space-y-4">
-          {addresses.map((addr) => (
-            <Card key={addr.id}>
-              <CardContent className="flex items-start justify-between pt-6">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm font-medium">{addr.firstName} {addr.lastName}</p>
-                    {addr.isDefault && <Badge variant="secondary" className="text-xs">Default</Badge>}
-                  </div>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    {addr.line1}{addr.line2 ? `, ${addr.line2}` : ""}<br />
-                    {addr.city}, {addr.state} {addr.postalCode}
-                  </p>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => { removeAddress(addr.id); toast("Address removed") }}
-                  aria-label="Remove address"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
-    </div>
-  )
+  const { error } = await supabase
+    .from("addresses")
+    .delete()
+    .eq("id", id)
+
+  if (error) {
+    console.error("Error removing address:", error)
+    throw new Error("Failed to remove address")
+  }
 }
