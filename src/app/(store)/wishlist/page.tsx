@@ -13,8 +13,19 @@ const allProducts = data.products as Product[]
 
 export default function WishlistPage() {
   const wishlistItems = useWishlistStore((s) => s.items)
+  const loadWishlist = useWishlistStore((s) => s.load)
   const [mounted, setMounted] = useState(false)
-  useEffect(() => setMounted(true), [])
+
+  // بارگذاری اولیه و تنظیم mounted
+  useEffect(() => {
+    setMounted(true)
+
+    async function init() {
+      await loadWishlist()
+    }
+
+    init()
+  }, [loadWishlist])
 
   if (!mounted) {
     return (
@@ -24,8 +35,9 @@ export default function WishlistPage() {
     )
   }
 
+  // فیلتر محصولات با استفاده از includes (چون wishlistItems آرایه‌ای از string است)
   const wishlistedProducts = allProducts.filter((p) =>
-    wishlistItems.some((w) => w.productId === p.id)
+    wishlistItems.includes(p.id)
   )
 
   if (wishlistedProducts.length === 0) {
