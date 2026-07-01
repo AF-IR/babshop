@@ -1,7 +1,6 @@
 "use client"
 
 import { create } from "zustand"
-import type { Product } from "@/types"
 import {
   getFavorites,
   addFavorite,
@@ -9,11 +8,11 @@ import {
 } from "@/lib/favorites"
 
 interface WishlistState {
-  items: Product[]
+  items: string[]
 
   load: () => Promise<void>
 
-  addItem: (product: Product) => Promise<void>
+  addItem: (productId: string) => Promise<void>
 
   removeItem: (productId: string) => Promise<void>
 
@@ -24,47 +23,30 @@ export const useWishlistStore = create<WishlistState>((set, get) => ({
   items: [],
 
   load: async () => {
-    try {
-      const items = await getFavorites()
-      set({ items })
-    } catch (err) {
-      console.error(err)
-    }
+    const ids = await getFavorites()
+
+    set({
+      items: ids,
+    })
   },
 
-  addItem: async (product) => {
-    try {
-      await addFavorite(product)
+  addItem: async (productId) => {
+    await addFavorite(productId)
 
-      set((state) => {
-        if (state.items.some((p) => p.id === product.id)) {
-          return state
-        }
-
-        return {
-          items: [...state.items, product],
-        }
-      })
-    } catch (err) {
-      console.error(err)
-      throw err
-    }
+    set((state) => ({
+      items: [...new Set([...state.items, productId])],
+    }))
   },
 
   removeItem: async (productId) => {
-    try {
-      await removeFavorite(productId)
+    await removeFavorite(productId)
 
-      set((state) => ({
-        items: state.items.filter((p) => p.id !== productId),
-      }))
-    } catch (err) {
-      console.error(err)
-      throw err
-    }
+    set((state) => ({
+      items: state.items.filter((id) => id !== productId),
+    }))
   },
 
   hasItem: (productId) => {
-    return get().items.some((p) => p.id === productId)
+    return get().items.includes(productId)
   },
 }))
