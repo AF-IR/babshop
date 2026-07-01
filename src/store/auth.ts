@@ -3,57 +3,19 @@
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
 import type { User, Address } from "@/types"
+import { signIn, signUp, signOut, getUser } from "@/lib/auth"
 
 interface AuthState {
   user: User | null
   isAuthenticated: boolean
 
-  login: (email: string, password: string) => boolean
-  register: (data: { firstName: string; lastName: string; email: string; password: string }) => boolean
+  login: (email: string, password: string) => Promise<boolean>
+  register: (data: { firstName: string; lastName: string; email: string; password: string }) => Promise<boolean>
   logout: () => void
   updateProfile: (data: Partial<Pick<User, "firstName" | "lastName" | "email">>) => void
   addAddress: (address: Omit<Address, "id">) => void
   removeAddress: (id: string) => void
 }
-
-// Demo users — in production, this comes from your auth provider
-const DEMO_USERS: Array<User & { password: string }> = [
-  {
-    id: "user-1",
-    email: "admin@example.com",
-    firstName: "Admin",
-    lastName: "User",
-    role: "admin",
-    addresses: [],
-    createdAt: "2025-01-01T00:00:00Z",
-    updatedAt: "2025-01-01T00:00:00Z",
-    password: "password123",
-  },
-  {
-    id: "user-2",
-    email: "demo@example.com",
-    firstName: "Jane",
-    lastName: "Smith",
-    role: "customer",
-    addresses: [
-      {
-        id: "addr-demo-1",
-        type: "shipping",
-        firstName: "Jane",
-        lastName: "Smith",
-        line1: "123 Main Street",
-        city: "San Francisco",
-        state: "CA",
-        postalCode: "94105",
-        country: "US",
-        isDefault: true,
-      },
-    ],
-    createdAt: "2025-01-15T00:00:00Z",
-    updatedAt: "2025-01-15T00:00:00Z",
-    password: "password123",
-  },
-]
 
 export const useAuthStore = create<AuthState>()(
   persist(
@@ -61,34 +23,24 @@ export const useAuthStore = create<AuthState>()(
       user: null,
       isAuthenticated: false,
 
-      login: (email, password) => {
-        const found = DEMO_USERS.find(
-          (u) => u.email === email && u.password === password
-        )
-        if (found) {
-          const { password: _, ...user } = found
-          set({ user, isAuthenticated: true })
-          return true
+      login: async (email, password) => {
+        const { data, error } = await signIn(email, password)
+        if (error || !data.user) {
+          return false
         }
-        return false
+        // تبدیل user از Supabase به نوع User خودمان (در صورت نیاز)
+        // فعلاً فقط true برگردان، بعداً mapping انجام می‌شود
+        return true
       },
 
-      register: (data) => {
-        const exists = DEMO_USERS.some((u) => u.email === data.email)
-        if (exists) return false
-
-        const newUser: User = {
-          id: `user-${Date.now()}`,
-          email: data.email,
-          firstName: data.firstName,
-          lastName: data.lastName,
-          role: "customer",
-          addresses: [],
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
+      register: async (data) => {
+        const { error } = await signUp(data.email, data.password, {
+          first_name: data.firstName,
+          last_name: data.lastName,
+        })
+        if (error) {
+          return false
         }
-
-        set({ user: newUser, isAuthenticated: true })
         return true
       },
 
