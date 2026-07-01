@@ -19,7 +19,7 @@ import {
 } from "@/lib/addresses"
 
 export default function AddressesPage() {
-  const { user, isReady } = useAuthGuard()
+  const { isReady } = useAuthGuard()  // user حذف شد
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState({
     firstName: "", lastName: "", line1: "", line2: "",
@@ -48,23 +48,46 @@ export default function AddressesPage() {
     loadAddresses()
   }, [isReady])
 
-  function handleAdd(e: React.FormEvent) {
+  // ------------------------------------------------------------
+  // ۱- تابع handleAdd به‌روزرسانی شد (async با try/catch و به‌روزرسانی state)
+  // ------------------------------------------------------------
+  async function handleAdd(e: React.FormEvent) {
     e.preventDefault()
-    addAddress({
-      type: "shipping",
-      firstName: form.firstName,
-      lastName: form.lastName,
-      line1: form.line1,
-      line2: form.line2 || undefined,
-      city: form.city,
-      state: form.state,
-      postalCode: form.postalCode,
-      country: form.country,
-      isDefault: (addresses.length ?? 0) === 0,
-    })
-    toast.success("Address added")
-    setShowForm(false)
-    setForm({ firstName: "", lastName: "", line1: "", line2: "", city: "", state: "", postalCode: "", country: "US" })
+
+    try {
+      const newAddress = await addAddress({
+        type: "shipping",
+        firstName: form.firstName,
+        lastName: form.lastName,
+        line1: form.line1,
+        line2: form.line2 || undefined,
+        city: form.city,
+        state: form.state,
+        postalCode: form.postalCode,
+        country: form.country,
+        isDefault: addresses.length === 0,
+      })
+
+      setAddresses((prev) => [...prev, newAddress])
+
+      toast.success("Address added")
+
+      setShowForm(false)
+
+      setForm({
+        firstName: "",
+        lastName: "",
+        line1: "",
+        line2: "",
+        city: "",
+        state: "",
+        postalCode: "",
+        country: "US",
+      })
+    } catch (err) {
+      console.error(err)
+      toast.error("Failed to save address")
+    }
   }
 
   return (
@@ -135,10 +158,26 @@ export default function AddressesPage() {
                     {addr.city}, {addr.state} {addr.postalCode}
                   </p>
                 </div>
+                {/* ------------------------------------------------------------
+                    ۲- دکمه حذف به‌روزرسانی شد (async با try/catch و به‌روزرسانی state)
+                ------------------------------------------------------------ */}
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => { removeAddress(addr.id); toast("Address removed") }}
+                  onClick={async () => {
+                    try {
+                      await removeAddress(addr.id)
+
+                      setAddresses((prev) =>
+                        prev.filter((a) => a.id !== addr.id)
+                      )
+
+                      toast.success("Address removed")
+                    } catch (err) {
+                      console.error(err)
+                      toast.error("Failed to remove address")
+                    }
+                  }}
                   aria-label="Remove address"
                 >
                   <Trash2 className="h-4 w-4" />
