@@ -18,8 +18,9 @@ import { useTranslations } from "next-intl"
 import { useState, useEffect, useCallback } from "react"
 import type { Category } from "@/types"
 import { useCartStore } from "@/store/cart"
-import { useAuthStore } from "@/store/auth"
 import { useRouter } from "next/navigation"
+import { useUser } from "@/hooks/use-user"
+import { supabase } from "@/lib/supabase"
 
 interface HeaderProps {
   /** All categories (top-level + subcategories) from the repository layer */
@@ -35,9 +36,7 @@ export function Header({ categories = [] }: HeaderProps) {
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null)
   const openCart = useCartStore((s) => s.openCart)
   const getItemCount = useCartStore((s) => s.getItemCount)
-  const user = useAuthStore((s) => s.user)
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
-  const logout = useAuthStore((s) => s.logout)
+  const { user, isAuthenticated } = useUser()
   const router = useRouter()
 
   const [mounted, setMounted] = useState(false)
@@ -204,7 +203,10 @@ export function Header({ categories = [] }: HeaderProps) {
                   Settings
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => { logout(); router.push("/") }}>
+                <DropdownMenuItem onClick={async () => {
+                  await supabase.auth.signOut()
+                  router.push("/")
+                }}>
                   <LogOut className="mr-2 h-4 w-4" />
                   {tCommon("signOut")}
                 </DropdownMenuItem>
