@@ -25,12 +25,28 @@ export default function AddressesPage() {
     firstName: "", lastName: "", line1: "", line2: "",
     city: "", state: "", postalCode: "", country: "US",
   })
+  const [addresses, setAddresses] = useState<Address[]>([])
 
   if (!isReady) return null
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     setForm((f) => ({ ...f, [e.target.name]: e.target.value }))
   }
+
+  useEffect(() => {
+    if (!isReady) return
+
+    async function loadAddresses() {
+      try {
+        const data = await getAddresses()
+        setAddresses(data)
+      } catch (error) {
+        console.error(error)
+      }
+    }
+
+    loadAddresses()
+  }, [isReady])
 
   function handleAdd(e: React.FormEvent) {
     e.preventDefault()
@@ -44,14 +60,12 @@ export default function AddressesPage() {
       state: form.state,
       postalCode: form.postalCode,
       country: form.country,
-      isDefault: (user?.addresses.length ?? 0) === 0,
+      isDefault: (addresses.length ?? 0) === 0,
     })
     toast.success("Address added")
     setShowForm(false)
     setForm({ firstName: "", lastName: "", line1: "", line2: "", city: "", state: "", postalCode: "", country: "US" })
   }
-
-  const addresses: Address[] = user?.addresses ?? []
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6 lg:px-8">
