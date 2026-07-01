@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils"
 import { shopLinks, mobileMenuSections } from "@/lib/navigation"
 import { siteConfig } from "@/lib/config"
 import { useTranslations } from "next-intl"
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect } from "react"
 import type { Category } from "@/types"
 import { useCartStore } from "@/store/cart"
 import { useRouter } from "next/navigation"
@@ -182,13 +182,13 @@ export function Header({ categories = [] }: HeaderProps) {
                   aria-label={t("accountMenu")}
                 >
                   <div className="flex h-7 w-7 items-center justify-center rounded-full bg-foreground text-xs font-medium text-background">
-                    {user?.user_metadata?.firstName?.[0] ?? "U"}
+                    {user?.firstName?.[0] ?? "U"}
                   </div>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
                   <div className="px-2 py-1.5">
                     <p className="text-sm font-medium">
-                      {user?.user_metadata?.firstName} {user?.user_metadata?.lastName}
+                      {user?.firstName} {user?.lastName}
                     </p>
                     <p className="text-xs text-muted-foreground">{user?.email}</p>
                   </div>
