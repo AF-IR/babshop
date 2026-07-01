@@ -8,12 +8,13 @@ import { Separator } from "@/components/ui/separator"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { PageHeader } from "@/components/ui/page-header"
 import { useAuthGuard } from "@/hooks/use-auth-guard"
-import { useAuthStore } from "@/store/auth"
 import { toast } from "sonner"
+import { supabase } from "@/lib/supabase"
+import { useRouter } from "next/navigation"
 
 export default function SettingsPage() {
   const { user, isReady } = useAuthGuard()
-  const updateProfile = useAuthStore((s) => s.updateProfile)
+  const router = useRouter()
 
   const [firstName, setFirstName] = useState("")
   const [lastName, setLastName] = useState("")
@@ -29,10 +30,24 @@ export default function SettingsPage() {
 
   if (!isReady) return null
 
-  function handleSave(e: React.FormEvent) {
+  async function handleSave(e: React.FormEvent) {
     e.preventDefault()
-    updateProfile({ firstName, lastName, email })
+
+    const { error } = await supabase.auth.updateUser({
+      email,
+      data: {
+        firstName,
+        lastName,
+      },
+    })
+
+    if (error) {
+      toast.error(error.message)
+      return
+    }
+
     toast.success("Profile updated")
+    router.refresh()
   }
 
   return (
