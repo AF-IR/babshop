@@ -7,22 +7,6 @@ import { siteConfig } from "@/lib/config"
 import "./globals.css"
 import { CartProvider } from "@/app/providers/cart-provider"
 
-export default function RootLayout({ children }) {
-  return (
-    <html>
-      <body>
-        <CartProvider>
-          {children}
-        </CartProvider>
-      </body>
-    </html>
-  )
-}
-const vazir = Vazirmatn({
-  variable: "--font-vazir",
-  subsets: ["arabic", "latin"],
-})
-
 export const metadata: Metadata = {
   title: {
     default: `${siteConfig.name} — ${siteConfig.tagline}`,
