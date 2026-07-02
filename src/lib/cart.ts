@@ -1,38 +1,120 @@
 import { supabase } from "@/lib/supabase"
+import { productRepository } from "@/lib/repositories"
 
-export async function getCart() {
+import type {
+  CartItem,
+  ProductImage,
+} from "@/types"
+
+interface CartRow {
+  id: string
+  user_id: string
+  product_id: string
+  variant_id: string
+  quantity: number
+}
+
+async function getCurrentUser() {
   const {
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (!user) return []
+  return user
+}
+
+async function buildCartItem(
+  row: CartRow
+): Promise<CartItem | null> {
+  const product = await productRepository.getById(
+    row.product_id
+  )
+
+  if (!product) return null
+
+  const variant =
+    product.variants.find(
+      (v) => v.id === row.variant_id
+    ) ?? product.variants[0]
+
+  if (!variant) return null
+
+  const image: ProductImage =
+    product.images[0] ?? {
+      url: "",
+      alt: product.name,
+    }
+
+  return {
+    id: row.id,
+
+    variantId: variant.id,
+
+    productId: product.id,
+
+    name: product.name,
+
+    variantName: variant.name,
+
+    image,
+
+    slug: product.slug,
+
+    price: variant.price,
+
+    quantity: row.quantity,
+
+    lineTotal: variant.price * row.quantity,
+  }
+}
+
+// ============================================================
+// Public API
+// ============================================================
+
+export async function getCart(): Promise<CartItem[]> {
+  const user = await getCurrentUser()
+
+  if (!user) {
+    return []
+  }
 
   const { data, error } = await supabase
     .from("cart_items")
     .select("*")
     .eq("user_id", user.id)
 
-  if (error) throw error
+  if (error) {
+    console.error(error)
+    return []
+  }
 
-  return data ?? []
+  const items = await Promise.all(
+    (data ?? []).map((row) => buildCartItem(row as CartRow))
+  )
+
+  return items.filter(
+    (item): item is CartItem => item !== null
+  )
 }
 
-export async function addCartItem(
-  productId: string,
-  variantId: string,
-  quantity: number
-) {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+export async function addItem(params: {
+  variantId: string
+  productId: string
+  quantity?: number
+}) {
+  const user = await getCurrentUser()
 
-  if (!user) return
+  if (!user) {
+    throw new Error("User not logged in")
+  }
+
+  const quantity = params.quantity ?? 1
 
   const { data: existing } = await supabase
     .from("cart_items")
-    .select("id, quantity")
+    .select("*")
     .eq("user_id", user.id)
-    .eq("variant_id", variantId)
+    .eq("variant_id", params.variantId)
     .maybeSingle()
 
   if (existing) {
@@ -42,60 +124,118 @@ export async function addCartItem(
         quantity: existing.quantity + quantity,
       })
       .eq("id", existing.id)
-
-    return
+  } else {
+    await supabase
+      .from("cart_items")
+      .insert({
+        user_id: user.id,
+        product_id: params.productId,
+        variant_id: params.variantId,
+        quantity,
+      })
   }
 
-  await supabase.from("cart_items").insert({
-    user_id: user.id,
-    product_id: productId,
-    variant_id: variantId,
-    quantity,
-  })
+  return getCart()
 }
 
-export async function updateCartItem(
+// ============================================================
+// Remove item
+// ============================================================
+
+export async function removeItem(
+  variantId: string
+): Promise<CartItem[]> {
+  const user = await getCurrentUser()
+
+  if (!user) {
+    return []
+  }
+
+  const { error } = await supabase
+    .from("cart_items")
+    .delete()
+    .eq("user_id", user.id)
+    .eq("variant_id", variantId)
+
+  if (error) {
+    console.error(error)
+  }
+
+  return getCart()
+}
+
+// ============================================================
+// Update quantity
+// ============================================================
+
+export async function updateQuantity(
   variantId: string,
   quantity: number
-) {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+): Promise<CartItem[]> {
+  const user = await getCurrentUser()
 
-  if (!user) return
+  if (!user) {
+    return []
+  }
 
-  await supabase
+  if (quantity <= 0) {
+    return removeItem(variantId)
+  }
+
+  const { error } = await supabase
     .from("cart_items")
-    .update({ quantity })
+    .update({
+      quantity,
+    })
     .eq("user_id", user.id)
     .eq("variant_id", variantId)
+
+  if (error) {
+    console.error(error)
+  }
+
+  return getCart()
 }
 
-export async function removeCartItem(
-  variantId: string
-) {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+// ============================================================
+// Clear cart
+// ============================================================
+
+export async function clearCart(): Promise<void> {
+  const user = await getCurrentUser()
 
   if (!user) return
 
-  await supabase
+  const { error } = await supabase
     .from("cart_items")
     .delete()
     .eq("user_id", user.id)
-    .eq("variant_id", variantId)
+
+  if (error) {
+    console.error(error)
+  }
 }
 
-export async function clearCart() {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+// ============================================================
+// Merge guest cart after login
+// ============================================================
 
-  if (!user) return
+export async function mergeGuestCart(
+  guestItems: CartItem[]
+): Promise<CartItem[]> {
+  const user = await getCurrentUser()
 
-  await supabase
-    .from("cart_items")
-    .delete()
-    .eq("user_id", user.id)
+  if (!user) {
+    return guestItems
+  }
+
+  for (const item of guestItems) {
+    await addItem({
+      productId: item.productId,
+      variantId: item.variantId,
+      quantity: item.quantity,
+    })
+  }
+
+  return getCart()
 }
