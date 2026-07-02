@@ -1,4 +1,5 @@
 import { supabase } from "./supabase";
+
 export async function signIn(email: string, password: string) {
   return supabase.auth.signInWithPassword({
     email,
@@ -23,6 +24,7 @@ export async function signUp(
     },
   });
 }
+
 export async function signInWithGoogle() {
   return supabase.auth.signInWithOAuth({
     provider: "google",
