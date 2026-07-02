@@ -1,18 +1,21 @@
 import { supabase } from "@/lib/supabase"
-// ✅ تغییر نام تابع
-import { getUser } from "@/lib/auth"   // قبلاً getCurrentUser
+import { getUser } from "@/lib/auth"
 import type { CartItem } from "@/types"
 
-// Helper to wrap Supabase calls with timeout
-const withTimeout = <T>(promise: Promise<T>, ms = 10000): Promise<T> => {
+// ✅ اصلاح شده: با as T برای رفع خطای TypeScript
+const withTimeout = async <T>(
+  promise: Promise<T>,
+  ms = 10000
+): Promise<T> => {
   const timeout = new Promise<never>((_, reject) =>
     setTimeout(() => reject(new Error("Request timeout")), ms)
   )
-  return Promise.race([promise, timeout])
+
+  return (await Promise.race([promise, timeout])) as T
 }
 
 export async function getCart(): Promise<CartItem[]> {
-  const user = await getUser()  // ✅ تغییر نام تابع
+  const user = await getUser()
   if (!user) return []
 
   const { data, error } = await withTimeout(
@@ -53,7 +56,7 @@ export async function addItem(params: {
   productId: string
   quantity?: number
 }): Promise<CartItem[]> {
-  const user = await getUser()  // ✅ تغییر نام تابع
+  const user = await getUser()
   if (!user) {
     throw new Error("NOT_AUTHENTICATED")
   }
@@ -106,7 +109,7 @@ export async function addItem(params: {
 }
 
 export async function removeItem(variantId: string): Promise<CartItem[]> {
-  const user = await getUser()  // ✅ تغییر نام تابع
+  const user = await getUser()
   if (!user) return []
 
   const { error } = await withTimeout(
@@ -129,7 +132,7 @@ export async function updateQuantity(
   variantId: string,
   quantity: number
 ): Promise<CartItem[]> {
-  const user = await getUser()  // ✅ تغییر نام تابع
+  const user = await getUser()
   if (!user) return []
 
   const { error } = await withTimeout(
@@ -149,7 +152,7 @@ export async function updateQuantity(
 }
 
 export async function clearCart(): Promise<void> {
-  const user = await getUser()  // ✅ تغییر نام تابع
+  const user = await getUser()
   if (!user) return
 
   const { error } = await withTimeout(
@@ -166,7 +169,7 @@ export async function clearCart(): Promise<void> {
 }
 
 export async function mergeGuestCart(guestItems: any[]): Promise<CartItem[]> {
-  const user = await getUser()  // ✅ تغییر نام تابع
+  const user = await getUser()
   if (!user || !guestItems.length) return getCart()
 
   for (const guest of guestItems) {
