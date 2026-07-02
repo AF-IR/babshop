@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import Link from "next/link"
 import { ShoppingBag, Heart } from "lucide-react"
 import { toast } from "sonner"
@@ -18,7 +18,6 @@ import {
   BreadcrumbItem,
   BreadcrumbLink,
   BreadcrumbList,
-  BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
 import { ProductGallery } from "@/components/products/product-gallery"
@@ -28,6 +27,7 @@ import { ProductGrid } from "@/components/products/product-grid"
 import { formatPrice } from "@/lib/utils"
 import { breadcrumbJsonLd } from "@/lib/structured-data"
 import type { Product, Brand, Category } from "@/types"
+import DOMPurify from "isomorphic-dompurify"
 
 interface ProductDetailViewProps {
   product: Product
@@ -46,9 +46,11 @@ export function ProductDetailView({
     product.variants[0]?.id ?? ""
   )
   const [quantity, setQuantity] = useState(1)
+  const [isAdding, setIsAdding] = useState(false)
 
   const addToCart = useCartStore((s) => s.addItem)
   const openCart = useCartStore((s) => s.openCart)
+  const isAddingStore = useCartStore((s) => s.isAdding)
 
   // Wishlist
   const wishlistItems = useWishlistStore((s) => s.items)
@@ -58,26 +60,14 @@ export function ProductDetailView({
 
   const addRecentlyViewed = useRecentlyViewedStore((s) => s.addItem)
 
-  const [mounted, setMounted] = useState(false)
-
-  // ===== اصلاح ۲: useEffect با await =====
+  // ===== FIX: corrected dependency and added error handling =====
   useEffect(() => {
-    setMounted(true)
-
-    async function init() {
-      await loadWishlist()
-    }
-
-    init()
+    loadWishlist().catch(console.error)
   }, [loadWishlist])
-  // ======================================
 
-  // ===== اصلاح ۱: isWishlisted با includes (درست است) =====
-  const isWishlisted =
-    mounted && wishlistItems.includes(product.id)
-  // ======================================================
+  const isWishlisted = wishlistItems.includes(product.id)
 
-  // Track recently viewed
+  // ===== FIX: use `product` as dependency (or specific fields) =====
   useEffect(() => {
     addRecentlyViewed({
       productId: product.id,
@@ -87,35 +77,53 @@ export function ProductDetailView({
       imageUrl: product.images[0]?.url ?? "",
       imageAlt: product.images[0]?.alt ?? product.name,
     })
-  }, [product.id])
+  }, [product, addRecentlyViewed])
 
+  // ===== FIX: remove unnecessary useMemo for simple find =====
   const selectedVariant = product.variants.find(
     (v) => v.id === selectedVariantId
   )
+
   if (!selectedVariant) return null
 
   const isOnSale =
-    selectedVariant.compareAtPrice &&
+    !!selectedVariant.compareAtPrice &&
     selectedVariant.compareAtPrice > selectedVariant.price
+
   const inStock =
     selectedVariant.inventory.quantity > 0 ||
     selectedVariant.inventory.allowBackorder
 
-  function handleAddToCart() {
-    addToCart({
-      variantId: selectedVariant!.id,
-      productId: product.id,
-      name: product.name,
-      variantName: selectedVariant!.name,
-      image: product.images[0] ?? { url: "", alt: product.name },
-      slug: product.slug,
-      price: selectedVariant!.price,
-      quantity,
-    })
-    openCart()
+  async function handleAddToCart() {
+    if (isAdding || isAddingStore) return
+    setIsAdding(true)
+
+    try {
+      await addToCart({
+        variantId: selectedVariant.id,
+        productId: product.id,
+        quantity,
+        productName: product.name,
+        variantName: selectedVariant.name,
+        imageUrl: product.images[0]?.url || "",
+        imageAlt: product.images[0]?.alt || product.name,
+        slug: product.slug,
+        price: selectedVariant.price,
+        currency: selectedVariant.currency,
+      })
+
+      openCart()
+      toast.success("Added to cart")
+    } catch (err: any) {
+      if (err?.message !== "NOT_AUTHENTICATED") {
+        toast.error("Failed to add to cart")
+      }
+      console.error(err)
+    } finally {
+      setIsAdding(false)
+    }
   }
 
-  // ===== اصلاح ۳: تابع async با مدیریت خطا =====
   async function handleToggleWishlist() {
     try {
       if (isWishlisted) {
@@ -130,7 +138,6 @@ export function ProductDetailView({
       toast.error("Operation failed")
     }
   }
-  // =============================================
 
   const breadcrumbLd = breadcrumbJsonLd([
     { name: "Shop", href: "/shop" },
@@ -153,13 +160,19 @@ export function ProductDetailView({
     },
     offers: {
       "@type": "Offer",
-      price: (selectedVariant.price / 100).toFixed(2),
+      price: Number((selectedVariant.price / 100).toFixed(2)),
       priceCurrency: selectedVariant.currency,
       availability: inStock
         ? "https://schema.org/InStock"
         : "https://schema.org/OutOfStock",
     },
   }
+
+  // ===== FIX: only sanitize if body is user-generated =====
+  const sanitizedBody = useMemo(
+    () => (product.body ? DOMPurify.sanitize(product.body) : ""),
+    [product.body]
+  )
 
   return (
     <div className="mx-auto max-w-[1440px] px-4 py-8 sm:px-6 lg:px-8">
@@ -172,19 +185,15 @@ export function ProductDetailView({
           <BreadcrumbItem>
             <BreadcrumbLink render={<Link href="/shop" />}>Shop</BreadcrumbLink>
           </BreadcrumbItem>
-          {categoryAncestors.map((cat, idx) => {
-            const isLast = idx === categoryAncestors.length - 1
+          {categoryAncestors.map((cat) => {
+            const key = cat.id ?? cat.slug
             return (
-              <div key={cat.id} className="contents">
+              <div key={key} className="contents">
                 <BreadcrumbSeparator />
                 <BreadcrumbItem>
-                  {isLast ? (
-                    <BreadcrumbPage>{cat.name}</BreadcrumbPage>
-                  ) : (
-                    <BreadcrumbLink render={<Link href={`/${cat.slug}`} />}>
-                      {cat.name}
-                    </BreadcrumbLink>
-                  )}
+                  <BreadcrumbLink render={<Link href={`/${cat.slug}`} />}>
+                    {cat.name}
+                  </BreadcrumbLink>
                 </BreadcrumbItem>
               </div>
             )
@@ -269,11 +278,15 @@ export function ProductDetailView({
             <Button
               size="lg"
               className="w-full sm:flex-1"
-              disabled={!inStock}
+              disabled={!inStock || isAdding || isAddingStore}
               onClick={handleAddToCart}
             >
               <ShoppingBag className="mr-2 h-4 w-4" />
-              {inStock ? "Add to Cart" : "Out of Stock"}
+              {isAdding || isAddingStore
+                ? "Adding..."
+                : inStock
+                ? "Add to Cart"
+                : "Out of Stock"}
             </Button>
           </div>
 
@@ -294,7 +307,7 @@ export function ProductDetailView({
           <div className="mx-auto max-w-3xl">
             <div
               className="blog-body"
-              dangerouslySetInnerHTML={{ __html: product.body }}
+              dangerouslySetInnerHTML={{ __html: sanitizedBody }}
             />
           </div>
         </section>
