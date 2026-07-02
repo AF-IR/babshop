@@ -2,10 +2,10 @@ import { supabase } from "@/lib/supabase"
 import { getUser } from "@/lib/auth"
 import type { CartItem } from "@/types"
 
-// ❌ withTimeout حذف شد - مستقیماً از await استفاده می‌کنیم
-
 export async function getCart(): Promise<CartItem[]> {
-  const user = await getUser()
+  const {
+    data: { user },
+  } = await getUser()
   if (!user) return []
 
   const { data, error } = await supabase
@@ -44,7 +44,9 @@ export async function addItem(params: {
   productId: string
   quantity?: number
 }): Promise<CartItem[]> {
-  const user = await getUser()
+  const {
+    data: { user },
+  } = await getUser()
   if (!user) {
     throw new Error("NOT_AUTHENTICATED")
   }
@@ -93,7 +95,9 @@ export async function addItem(params: {
 }
 
 export async function removeItem(variantId: string): Promise<CartItem[]> {
-  const user = await getUser()
+  const {
+    data: { user },
+  } = await getUser()
   if (!user) return []
 
   const { error } = await supabase
@@ -114,7 +118,9 @@ export async function updateQuantity(
   variantId: string,
   quantity: number
 ): Promise<CartItem[]> {
-  const user = await getUser()
+  const {
+    data: { user },
+  } = await getUser()
   if (!user) return []
 
   const { error } = await supabase
@@ -132,7 +138,9 @@ export async function updateQuantity(
 }
 
 export async function clearCart(): Promise<void> {
-  const user = await getUser()
+  const {
+    data: { user },
+  } = await getUser()
   if (!user) return
 
   const { error } = await supabase
@@ -147,7 +155,9 @@ export async function clearCart(): Promise<void> {
 }
 
 export async function mergeGuestCart(guestItems: any[]): Promise<CartItem[]> {
-  const user = await getUser()
+  const {
+    data: { user },
+  } = await getUser()
   if (!user || !guestItems.length) return getCart()
 
   for (const guest of guestItems) {
