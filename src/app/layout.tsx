@@ -7,6 +7,13 @@ import { siteConfig } from "@/lib/config"
 import "./globals.css"
 import { CartProvider } from "@/app/providers/cart-provider"
 
+// ✅ تعریف فونت
+const vazir = Vazirmatn({
+  subsets: ["arabic"],
+  variable: "--font-vazir",
+  display: "swap",
+})
+
 export const metadata: Metadata = {
   title: {
     default: `${siteConfig.name} — ${siteConfig.tagline}`,
@@ -62,7 +69,10 @@ export default async function RootLayout({
           }}
         />
         <NextIntlClientProvider messages={messages}>
-          {children}
+          {/* ✅ اضافه کردن CartProvider */}
+          <CartProvider>
+            {children}
+          </CartProvider>
         </NextIntlClientProvider>
         <Toaster position="bottom-right" />
       </body>
