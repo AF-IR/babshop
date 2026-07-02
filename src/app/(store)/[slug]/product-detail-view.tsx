@@ -27,7 +27,9 @@ import { ProductGrid } from "@/components/products/product-grid"
 import { formatPrice } from "@/lib/utils"
 import { breadcrumbJsonLd } from "@/lib/structured-data"
 import type { Product, Brand, Category } from "@/types"
-import DOMPurify from "isomorphic-dompurify"
+
+// ✅ حذف import DOMPurify
+// import DOMPurify from "isomorphic-dompurify"   // دیگر نیاز نیست
 
 interface ProductDetailViewProps {
   product: Product
@@ -60,14 +62,12 @@ export function ProductDetailView({
 
   const addRecentlyViewed = useRecentlyViewedStore((s) => s.addItem)
 
-  // ===== FIX: corrected dependency and added error handling =====
   useEffect(() => {
     loadWishlist().catch(console.error)
   }, [loadWishlist])
 
   const isWishlisted = wishlistItems.includes(product.id)
 
-  // ===== FIX: use `product` as dependency (or specific fields) =====
   useEffect(() => {
     addRecentlyViewed({
       productId: product.id,
@@ -79,7 +79,6 @@ export function ProductDetailView({
     })
   }, [product, addRecentlyViewed])
 
-  // ===== FIX: remove unnecessary useMemo for simple find =====
   const selectedVariant = product.variants.find(
     (v) => v.id === selectedVariantId
   )
@@ -168,11 +167,8 @@ export function ProductDetailView({
     },
   }
 
-  // ===== FIX: only sanitize if body is user-generated =====
-  const sanitizedBody = useMemo(
-    () => (product.body ? DOMPurify.sanitize(product.body) : ""),
-    [product.body]
-  )
+  // ✅ جایگزین sanitizedBody: بدون DOMPurify
+  const sanitizedBody = product.body ?? ""
 
   return (
     <div className="mx-auto max-w-[1440px] px-4 py-8 sm:px-6 lg:px-8">
