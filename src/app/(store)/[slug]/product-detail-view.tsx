@@ -28,9 +28,6 @@ import { formatPrice } from "@/lib/utils"
 import { breadcrumbJsonLd } from "@/lib/structured-data"
 import type { Product, Brand, Category } from "@/types"
 
-// ✅ حذف import DOMPurify
-// import DOMPurify from "isomorphic-dompurify"   // دیگر نیاز نیست
-
 interface ProductDetailViewProps {
   product: Product
   relatedProducts: Product[]
@@ -79,19 +76,24 @@ export function ProductDetailView({
     })
   }, [product, addRecentlyViewed])
 
+  // ✅ اصلاح شده با استفاده از متغیر مجزا
   const selectedVariant = product.variants.find(
     (v) => v.id === selectedVariantId
   )
 
-  if (!selectedVariant) return null
+  if (selectedVariant === undefined) {
+    return null
+  }
+
+  const variant = selectedVariant
 
   const isOnSale =
-    !!selectedVariant.compareAtPrice &&
-    selectedVariant.compareAtPrice > selectedVariant.price
+    !!variant.compareAtPrice &&
+    variant.compareAtPrice > variant.price
 
   const inStock =
-    selectedVariant.inventory.quantity > 0 ||
-    selectedVariant.inventory.allowBackorder
+    variant.inventory.quantity > 0 ||
+    variant.inventory.allowBackorder
 
   async function handleAddToCart() {
     if (isAdding || isAddingStore) return
@@ -99,16 +101,16 @@ export function ProductDetailView({
 
     try {
       await addToCart({
-        variantId: selectedVariant.id,
+        variantId: variant.id,
         productId: product.id,
         quantity,
         productName: product.name,
-        variantName: selectedVariant.name,
+        variantName: variant.name,
         imageUrl: product.images[0]?.url || "",
         imageAlt: product.images[0]?.alt || product.name,
         slug: product.slug,
-        price: selectedVariant.price,
-        currency: selectedVariant.currency,
+        price: variant.price,
+        currency: variant.currency,
       })
 
       openCart()
@@ -150,7 +152,7 @@ export function ProductDetailView({
     name: product.name,
     description: product.description,
     image: product.images.map((img) => img.url),
-    sku: selectedVariant.sku,
+    sku: variant.sku,
     brand: brand ? { "@type": "Brand", name: brand.name } : undefined,
     aggregateRating: {
       "@type": "AggregateRating",
@@ -159,15 +161,14 @@ export function ProductDetailView({
     },
     offers: {
       "@type": "Offer",
-      price: Number((selectedVariant.price / 100).toFixed(2)),
-      priceCurrency: selectedVariant.currency,
+      price: Number((variant.price / 100).toFixed(2)),
+      priceCurrency: variant.currency,
       availability: inStock
         ? "https://schema.org/InStock"
         : "https://schema.org/OutOfStock",
     },
   }
 
-  // ✅ جایگزین sanitizedBody: بدون DOMPurify
   const sanitizedBody = product.body ?? ""
 
   return (
@@ -220,21 +221,21 @@ export function ProductDetailView({
 
           <div className="mt-4 flex items-center gap-3">
             <span className="text-2xl font-semibold">
-              {formatPrice(selectedVariant.price, selectedVariant.currency)}
+              {formatPrice(variant.price, variant.currency)}
             </span>
             {isOnSale && (
               <>
                 <span className="text-lg text-muted-foreground line-through">
                   {formatPrice(
-                    selectedVariant.compareAtPrice!,
-                    selectedVariant.currency
+                    variant.compareAtPrice!,
+                    variant.currency
                   )}
                 </span>
                 <Badge variant="secondary">
                   {Math.round(
                     (1 -
-                      selectedVariant.price /
-                        selectedVariant.compareAtPrice!) *
+                      variant.price /
+                        variant.compareAtPrice!) *
                       100
                   )}
                   % off
@@ -260,7 +261,7 @@ export function ProductDetailView({
               <QuantitySelector
                 quantity={quantity}
                 onQuantityChange={setQuantity}
-                max={selectedVariant.inventory.quantity || 99}
+                max={variant.inventory.quantity || 99}
               />
               <Button
                 variant="outline"
