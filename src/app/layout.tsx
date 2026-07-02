@@ -5,7 +5,19 @@ import { getLocale, getMessages } from "next-intl/server"
 import { Toaster } from "sonner"
 import { siteConfig } from "@/lib/config"
 import "./globals.css"
+import { CartProvider } from "@/app/providers/cart-provider"
 
+export default function RootLayout({ children }) {
+  return (
+    <html>
+      <body>
+        <CartProvider>
+          {children}
+        </CartProvider>
+      </body>
+    </html>
+  )
+}
 const vazir = Vazirmatn({
   variable: "--font-vazir",
   subsets: ["arabic", "latin"],
