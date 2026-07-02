@@ -8,11 +8,11 @@ export function CartProvider({
 }: {
   children: React.ReactNode
 }) {
-  const loadCart = useCartStore((s) => s.load)
+  const load = useCartStore(s => s.load)
 
   useEffect(() => {
-    loadCart()
-  }, [loadCart])
+    load()
+  }, [load])
 
   return children
 }
