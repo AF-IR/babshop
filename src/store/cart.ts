@@ -1,14 +1,15 @@
 "use client"
 
 import { create } from "zustand"
-import { persist } from "zustand/middleware"
 import type { CartItem, ProductImage } from "@/types"
+import * as cartApi from "@/lib/cart"
 
 interface CartState {
   items: CartItem[]
   isOpen: boolean
 
-  // Actions
+  load: () => Promise<void>
+
   addItem: (item: {
     variantId: string
     productId: string
@@ -18,97 +19,69 @@ interface CartState {
     slug: string
     price: number
     quantity?: number
-  }) => void
-  removeItem: (variantId: string) => void
-  updateQuantity: (variantId: string, quantity: number) => void
-  clearCart: () => void
+  }) => Promise<void>
+
+  removeItem: (variantId: string) => Promise<void>
+
+  updateQuantity: (
+    variantId: string,
+    quantity: number
+  ) => Promise<void>
+
+  clearCart: () => Promise<void>
+
   toggleCart: () => void
   openCart: () => void
   closeCart: () => void
 
-  // Computed
   getSubtotal: () => number
   getItemCount: () => number
 }
 
-export const useCartStore = create<CartState>()(
-  persist(
-    (set, get) => ({
-      items: [],
-      isOpen: false,
+export const useCartStore = create<CartState>((set, get) => ({
+  items: [],
+  isOpen: false,
 
-      addItem: (item) => {
-        set((state) => {
-          const existing = state.items.find(
-            (i) => i.variantId === item.variantId
-          )
+  load: async () => {
+    const items = await cartApi.getCart()
+    set({ items })
+  },
 
-          if (existing) {
-            return {
-              items: state.items.map((i) =>
-                i.variantId === item.variantId
-                  ? {
-                      ...i,
-                      quantity: i.quantity + (item.quantity ?? 1),
-                      lineTotal: i.price * (i.quantity + (item.quantity ?? 1)),
-                    }
-                  : i
-              ),
-            }
-          }
+  addItem: async (item) => {
+    const { variantId, productId, quantity } = item
+    await cartApi.addItem({ variantId, productId, quantity })
+    const items = await cartApi.getCart()
+    set({ items })
+  },
 
-          const quantity = item.quantity ?? 1
-          const newItem: CartItem = {
-            id: item.variantId,
-            variantId: item.variantId,
-            productId: item.productId,
-            name: item.name,
-            variantName: item.variantName,
-            image: item.image,
-            slug: item.slug,
-            price: item.price,
-            quantity,
-            lineTotal: item.price * quantity,
-          }
+  removeItem: async (variantId) => {
+    await cartApi.removeItem(variantId)
+    const items = await cartApi.getCart()
+    set({ items })
+  },
 
-          return { items: [...state.items, newItem] }
-        })
-      },
+  updateQuantity: async (variantId, quantity) => {
+    await cartApi.updateQuantity(variantId, quantity)
+    const items = await cartApi.getCart()
+    set({ items })
+  },
 
-      removeItem: (variantId) => {
-        set((state) => ({
-          items: state.items.filter((i) => i.variantId !== variantId),
-        }))
-      },
+  clearCart: async () => {
+    await cartApi.clearCart()
+    set({ items: [] })
+  },
 
-      updateQuantity: (variantId, quantity) => {
-        if (quantity <= 0) {
-          get().removeItem(variantId)
-          return
-        }
+  toggleCart: () => set((state) => ({ isOpen: !state.isOpen })),
+  openCart: () => set({ isOpen: true }),
+  closeCart: () => set({ isOpen: false }),
 
-        set((state) => ({
-          items: state.items.map((i) =>
-            i.variantId === variantId
-              ? { ...i, quantity, lineTotal: i.price * quantity }
-              : i
-          ),
-        }))
-      },
+  getSubtotal: () => {
+    const { items } = get()
+    return items.reduce((sum, item) => sum + item.lineTotal, 0)
+  },
 
-      clearCart: () => set({ items: [] }),
-      toggleCart: () => set((state) => ({ isOpen: !state.isOpen })),
-      openCart: () => set({ isOpen: true }),
-      closeCart: () => set({ isOpen: false }),
-
-      getSubtotal: () =>
-        get().items.reduce((sum, item) => sum + item.lineTotal, 0),
-      getItemCount: () =>
-        get().items.reduce((sum, item) => sum + item.quantity, 0),
-    }),
-    {
-      name: "cart-storage",
-      partialize: (state) => ({ items: state.items }),
-    }
-  )
-)
+  getItemCount: () => {
+    const { items } = get()
+    return items.reduce((sum, item) => sum + item.quantity, 0)
+  },
+}))
