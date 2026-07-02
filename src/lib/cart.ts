@@ -2,35 +2,23 @@ import { supabase } from "@/lib/supabase"
 import { getUser } from "@/lib/auth"
 import type { CartItem } from "@/types"
 
-// ✅ اصلاح شده: با as T برای رفع خطای TypeScript
-const withTimeout = async <T>(
-  promise: Promise<T>,
-  ms = 10000
-): Promise<T> => {
-  const timeout = new Promise<never>((_, reject) =>
-    setTimeout(() => reject(new Error("Request timeout")), ms)
-  )
-
-  return (await Promise.race([promise, timeout])) as T
-}
+// ❌ withTimeout حذف شد - مستقیماً از await استفاده می‌کنیم
 
 export async function getCart(): Promise<CartItem[]> {
   const user = await getUser()
   if (!user) return []
 
-  const { data, error } = await withTimeout(
-    supabase
-      .from("cart_items")
-      .select(`
-        id,
-        product_id,
-        variant_id,
-        quantity,
-        products (name, slug, images),
-        variants (name, price, currency)
-      `)
-      .eq("user_id", user.id)
-  )
+  const { data, error } = await supabase
+    .from("cart_items")
+    .select(`
+      id,
+      product_id,
+      variant_id,
+      quantity,
+      products (name, slug, images),
+      variants (name, price, currency)
+    `)
+    .eq("user_id", user.id)
 
   if (error) {
     console.error("getCart error:", error)
@@ -63,14 +51,12 @@ export async function addItem(params: {
 
   const quantity = params.quantity ?? 1
 
-  const { data: existing, error: fetchError } = await withTimeout(
-    supabase
-      .from("cart_items")
-      .select("id, quantity")
-      .eq("user_id", user.id)
-      .eq("variant_id", params.variantId)
-      .maybeSingle()
-  )
+  const { data: existing, error: fetchError } = await supabase
+    .from("cart_items")
+    .select("id, quantity")
+    .eq("user_id", user.id)
+    .eq("variant_id", params.variantId)
+    .maybeSingle()
 
   if (fetchError) {
     console.error("fetch existing cart item error:", fetchError)
@@ -78,27 +64,25 @@ export async function addItem(params: {
   }
 
   if (existing) {
-    const { error: updateError } = await withTimeout(
-      supabase
-        .from("cart_items")
-        .update({ quantity: existing.quantity + quantity })
-        .eq("id", existing.id)
-    )
+    const { error: updateError } = await supabase
+      .from("cart_items")
+      .update({ quantity: existing.quantity + quantity })
+      .eq("id", existing.id)
+
     if (updateError) {
       console.error("update cart item error:", updateError)
       throw updateError
     }
   } else {
-    const { error: insertError } = await withTimeout(
-      supabase
-        .from("cart_items")
-        .insert({
-          user_id: user.id,
-          product_id: params.productId,
-          variant_id: params.variantId,
-          quantity,
-        })
-    )
+    const { error: insertError } = await supabase
+      .from("cart_items")
+      .insert({
+        user_id: user.id,
+        product_id: params.productId,
+        variant_id: params.variantId,
+        quantity,
+      })
+
     if (insertError) {
       console.error("insert cart item error:", insertError)
       throw insertError
@@ -112,13 +96,11 @@ export async function removeItem(variantId: string): Promise<CartItem[]> {
   const user = await getUser()
   if (!user) return []
 
-  const { error } = await withTimeout(
-    supabase
-      .from("cart_items")
-      .delete()
-      .eq("user_id", user.id)
-      .eq("variant_id", variantId)
-  )
+  const { error } = await supabase
+    .from("cart_items")
+    .delete()
+    .eq("user_id", user.id)
+    .eq("variant_id", variantId)
 
   if (error) {
     console.error("removeItem error:", error)
@@ -135,13 +117,11 @@ export async function updateQuantity(
   const user = await getUser()
   if (!user) return []
 
-  const { error } = await withTimeout(
-    supabase
-      .from("cart_items")
-      .update({ quantity })
-      .eq("user_id", user.id)
-      .eq("variant_id", variantId)
-  )
+  const { error } = await supabase
+    .from("cart_items")
+    .update({ quantity })
+    .eq("user_id", user.id)
+    .eq("variant_id", variantId)
 
   if (error) {
     console.error("updateQuantity error:", error)
@@ -155,12 +135,10 @@ export async function clearCart(): Promise<void> {
   const user = await getUser()
   if (!user) return
 
-  const { error } = await withTimeout(
-    supabase
-      .from("cart_items")
-      .delete()
-      .eq("user_id", user.id)
-  )
+  const { error } = await supabase
+    .from("cart_items")
+    .delete()
+    .eq("user_id", user.id)
 
   if (error) {
     console.error("clearCart error:", error)
@@ -174,14 +152,12 @@ export async function mergeGuestCart(guestItems: any[]): Promise<CartItem[]> {
 
   for (const guest of guestItems) {
     try {
-      const { data: existing, error: fetchError } = await withTimeout(
-        supabase
-          .from("cart_items")
-          .select("id, quantity")
-          .eq("user_id", user.id)
-          .eq("variant_id", guest.variantId)
-          .maybeSingle()
-      )
+      const { data: existing, error: fetchError } = await supabase
+        .from("cart_items")
+        .select("id, quantity")
+        .eq("user_id", user.id)
+        .eq("variant_id", guest.variantId)
+        .maybeSingle()
 
       if (fetchError) {
         console.error("merge guest fetch error:", fetchError)
@@ -189,23 +165,19 @@ export async function mergeGuestCart(guestItems: any[]): Promise<CartItem[]> {
       }
 
       if (existing) {
-        await withTimeout(
-          supabase
-            .from("cart_items")
-            .update({ quantity: existing.quantity + guest.quantity })
-            .eq("id", existing.id)
-        )
+        await supabase
+          .from("cart_items")
+          .update({ quantity: existing.quantity + guest.quantity })
+          .eq("id", existing.id)
       } else {
-        await withTimeout(
-          supabase
-            .from("cart_items")
-            .insert({
-              user_id: user.id,
-              product_id: guest.productId,
-              variant_id: guest.variantId,
-              quantity: guest.quantity,
-            })
-        )
+        await supabase
+          .from("cart_items")
+          .insert({
+            user_id: user.id,
+            product_id: guest.productId,
+            variant_id: guest.variantId,
+            quantity: guest.quantity,
+          })
       }
     } catch (err) {
       console.error("mergeGuestCart item error:", err)
