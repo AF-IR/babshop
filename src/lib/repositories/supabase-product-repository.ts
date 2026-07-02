@@ -9,6 +9,23 @@ import type {
 
 import { supabase } from "@/lib/supabase";
 
+// ============================================================
+//  helpers
+// ============================================================
+
+function buildImages(p: any) {
+  if (Array.isArray(p.images) && p.images.length > 0) {
+    return p.images;
+  }
+
+  return [
+    {
+      url: p.image || "https://placehold.co/600x600",
+      alt: p.title,
+    },
+  ];
+}
+
 function mapProduct(p: any): Product {
   return {
     id: p.id,
@@ -17,17 +34,12 @@ function mapProduct(p: any): Product {
     description: p.description ?? "",
     body: p.body ?? "",
 
-    images: [
-      {
-        url: p.image || "https://placehold.co/600x600",
-        alt: p.title,
-      },
-    ],
+    images: buildImages(p),
 
     status: "active",
-    
+
     brandId: p.brand_id ?? "",
-    
+
     categoryIds: p.category_id ? [p.category_id] : [],
 
     tags: p.tags ?? [],
@@ -44,19 +56,25 @@ function mapProduct(p: any): Product {
 
     variants: [
       {
-        id: p.id,
+        id: p.variant_id ?? p.id,
         productId: p.id,
+
         sku: p.sku ?? "",
-        name: "Default",
+
+        name: p.variant_name ?? "Default",
 
         price: Number(p.price),
 
-        currency: "IRT",
+        compareAtPrice: p.compare_at_price
+          ? Number(p.compare_at_price)
+          : undefined,
+
+        currency: p.currency ?? "IRT",
 
         inventory: {
           quantity: Number(p.stock ?? 0),
           trackInventory: true,
-          allowBackorder: false,
+          allowBackorder: Boolean(p.allow_backorder),
         },
 
         options: [],
@@ -94,6 +112,10 @@ function paginate(
     },
   };
 }
+
+// ============================================================
+//  repository implementation
+// ============================================================
 
 export const supabaseProductRepository: ProductRepository = {
   async list(filters, sort, pagination) {
@@ -185,14 +207,12 @@ export const supabaseProductRepository: ProductRepository = {
   },
 
   async getByCategory(categorySlug, pagination) {
- //   console.log("CATEGORY SLUG =", categorySlug
     const { data: category } = await supabase
       .from("categories")
       .select("id")
       .eq("slug", categorySlug)
       .single();
- //   console.log("CATEGORY =", category)
-    
+
     if (!category) {
       return paginate([], 0, 1, 12);
     }
@@ -202,20 +222,14 @@ export const supabaseProductRepository: ProductRepository = {
 
     const from = (page - 1) * limit;
     const to = from + limit - 1;
-    //const all = await supabase
-   //   .from("products")
-  //    .select("title, category_id, published");
 
- //   console.log("ALL PRODUCTS");
-   // console.log(all.data);
     const { data, count, error } = await supabase
       .from("products")
       .select("*", { count: "exact" })
       .eq("published", true)
-      .eq("category_id", category.id)   // ✅ این خط مهمه
+      .eq("category_id", category.id)
       .range(from, to);
- //   console.log("PRODUCT COUNT =", count)
-//    console.log(data)
+
     if (error) {
       console.error(error);
       return paginate([], 0, page, limit);
@@ -227,7 +241,7 @@ export const supabaseProductRepository: ProductRepository = {
       page,
       limit
     );
-  },  // ✅ کاما اضافه شد (تنها تغییر)
+  },
 
   async search(queryText, pagination) {
     return this.list(
