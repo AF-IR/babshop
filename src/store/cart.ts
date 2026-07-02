@@ -1,7 +1,8 @@
 "use client"
 
 import { create } from "zustand"
-import { v4 as uuidv4 } from "uuid"
+// ❌ حذف import uuid
+// import { v4 as uuidv4 } from "uuid"
 import type { CartItem } from "@/types"
 import * as cartApi from "@/lib/cart"
 import {
@@ -70,7 +71,7 @@ export const useCartStore = create<CartState>((set, get) => ({
         const guest = getGuestCart()
         if (guest.length > 0) {
           const guestItems: ExtendedCartItem[] = guest.map((g) => ({
-            id: uuidv4(),
+            id: crypto.randomUUID(), // ✅ جایگزین uuidv4()
             variantId: g.variantId,
             productId: g.productId,
             quantity: g.quantity,
@@ -89,7 +90,6 @@ export const useCartStore = create<CartState>((set, get) => ({
       set({ items: items ?? [], isLoading: false })
     } catch (err) {
       console.error("cart load error:", err)
-      // FIX: do NOT reset items, keep existing state
       set({ isLoading: false })
     }
   },
@@ -104,7 +104,7 @@ export const useCartStore = create<CartState>((set, get) => ({
     )
 
     const optimisticItem: ExtendedCartItem = {
-      id: uuidv4(),
+      id: crypto.randomUUID(), // ✅ جایگزین uuidv4()
       variantId: item.variantId,
       productId: item.productId,
       quantity: item.quantity ?? 1,
@@ -141,7 +141,6 @@ export const useCartStore = create<CartState>((set, get) => ({
         quantity: item.quantity ?? 1,
       })
 
-      // Only update if this request is still the latest
       if (get()._requestId === currentRequestId) {
         set({
           items: serverItems?.length ? serverItems : currentItems,
@@ -165,10 +164,9 @@ export const useCartStore = create<CartState>((set, get) => ({
           currency: item.currency,
         })
         set({ isAdding: false })
-        throw err // Let component handle toast
+        throw err
       }
 
-      // Rollback only if this request is still the latest
       if (get()._requestId === currentRequestId) {
         set({ items: currentItems, isAdding: false })
       } else {
@@ -184,7 +182,6 @@ export const useCartStore = create<CartState>((set, get) => ({
     set({ _requestId: currentRequestId, isRemoving: true })
 
     const currentItems = get().items
-    // Optimistic: remove from UI
     set({ items: currentItems.filter((i) => i.variantId !== variantId) })
 
     try {
@@ -198,7 +195,6 @@ export const useCartStore = create<CartState>((set, get) => ({
         set({ isRemoving: false })
       }
     } catch (err) {
-      // Rollback only this item
       if (get()._requestId === currentRequestId) {
         set({ items: currentItems, isRemoving: false })
       } else {
@@ -214,7 +210,6 @@ export const useCartStore = create<CartState>((set, get) => ({
     set({ _requestId: currentRequestId, isUpdating: true })
 
     const currentItems = get().items
-    // Optimistic: update quantity locally
     const updatedItems = currentItems.map((i) =>
       i.variantId === variantId
         ? { ...i, quantity, lineTotal: i.price * quantity }
@@ -248,7 +243,7 @@ export const useCartStore = create<CartState>((set, get) => ({
     set({ _requestId: currentRequestId, isClearing: true })
 
     const currentItems = get().items
-    set({ items: [] }) // Optimistic
+    set({ items: [] })
 
     try {
       await cartApi.clearCart()
