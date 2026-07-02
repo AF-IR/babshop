@@ -13,21 +13,11 @@ interface CartState {
   addItem: (item: {
     variantId: string
     productId: string
-    name: string
-    variantName: string
-    image: ProductImage
-    slug: string
-    price: number
     quantity?: number
   }) => Promise<void>
 
   removeItem: (variantId: string) => Promise<void>
-
-  updateQuantity: (
-    variantId: string,
-    quantity: number
-  ) => Promise<void>
-
+  updateQuantity: (variantId: string, quantity: number) => Promise<void>
   clearCart: () => Promise<void>
 
   toggleCart: () => void
@@ -42,27 +32,69 @@ export const useCartStore = create<CartState>((set, get) => ({
   items: [],
   isOpen: false,
 
+  // 🔥 مهم: فقط یک بار load
   load: async () => {
     const items = await cartApi.getCart()
     set({ items })
   },
 
+  // 🔥 FIX اصلی: optimistic update
   addItem: async (item) => {
-    const { variantId, productId, quantity } = item
-    await cartApi.addItem({ variantId, productId, quantity })
-    const items = await cartApi.getCart()
-    set({ items })
+    const current = get().items
+
+    // 1. optimistic UI update
+    const existing = current.find(i => i.variantId === item.variantId)
+
+    let updated: CartItem[]
+
+    if (existing) {
+      updated = current.map(i =>
+        i.variantId === item.variantId
+          ? {
+              ...i,
+              quantity: i.quantity + (item.quantity ?? 1),
+              lineTotal:
+                i.price * (i.quantity + (item.quantity ?? 1)),
+            }
+          : i
+      )
+    } else {
+      updated = [
+        ...current,
+        {
+          id: item.variantId,
+          variantId: item.variantId,
+          productId: item.productId,
+          name: "",
+          variantName: "",
+          image: { url: "", alt: "" },
+          slug: "",
+          price: 0,
+          quantity: item.quantity ?? 1,
+          lineTotal: 0,
+        },
+      ]
+    }
+
+    set({ items: updated })
+
+    // 2. sync with backend
+    const serverItems = await cartApi.addItem({
+      variantId: item.variantId,
+      productId: item.productId,
+      quantity: item.quantity,
+    })
+
+    set({ items: serverItems })
   },
 
   removeItem: async (variantId) => {
-    await cartApi.removeItem(variantId)
-    const items = await cartApi.getCart()
+    const items = await cartApi.removeItem(variantId)
     set({ items })
   },
 
   updateQuantity: async (variantId, quantity) => {
-    await cartApi.updateQuantity(variantId, quantity)
-    const items = await cartApi.getCart()
+    const items = await cartApi.updateQuantity(variantId, quantity)
     set({ items })
   },
 
@@ -71,17 +103,13 @@ export const useCartStore = create<CartState>((set, get) => ({
     set({ items: [] })
   },
 
-  toggleCart: () => set((state) => ({ isOpen: !state.isOpen })),
+  toggleCart: () => set(s => ({ isOpen: !s.isOpen })),
   openCart: () => set({ isOpen: true }),
   closeCart: () => set({ isOpen: false }),
 
-  getSubtotal: () => {
-    const { items } = get()
-    return items.reduce((sum, item) => sum + item.lineTotal, 0)
-  },
+  getSubtotal: () =>
+    get().items.reduce((s, i) => s + i.lineTotal, 0),
 
-  getItemCount: () => {
-    const { items } = get()
-    return items.reduce((sum, item) => sum + item.quantity, 0)
-  },
+  getItemCount: () =>
+    get().items.reduce((s, i) => s + i.quantity, 0),
 }))
