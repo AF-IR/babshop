@@ -8,7 +8,7 @@ export function CartProvider({
 }: {
   children: React.ReactNode
 }) {
-  const load = useCartStore(s => s.load)
+  const load = useCartStore((s) => s.load)
 
   useEffect(() => {
     load()
