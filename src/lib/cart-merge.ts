@@ -1,5 +1,5 @@
-import { mergeGuestCart } from "@/lib/cart"
-import { useCartStore } from "@/store/cart"
+//import { mergeGuestCart } from "@/lib/cart"
+//import { useCartStore } from "@/store/cart"
 
 export interface GuestItem {
   variantId: string
