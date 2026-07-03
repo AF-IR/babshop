@@ -1,5 +1,5 @@
-//import { mergeGuestCart } from "@/lib/cart"
-//import { useCartStore } from "@/store/cart"
+import { mergeGuestCart } from "@/lib/cart"
+import { useCartStore } from "@/store/cart"
 
 export interface GuestItem {
   variantId: string
@@ -14,6 +14,8 @@ export interface GuestItem {
   currency?: string
 }
 
+let mergeInProgress = false
+
 export function getGuestCart(): GuestItem[] {
   if (typeof window === "undefined") return []
   try {
@@ -27,7 +29,6 @@ export function saveGuestItem(item: GuestItem) {
   if (typeof window === "undefined") return
 
   const current = getGuestCart()
-
   const exists = current.find((i) => i.variantId === item.variantId)
 
   let updated: GuestItem[]
@@ -57,22 +58,52 @@ export function clearGuestCart() {
   }
 }
 
-// ===== FIX: only clear guest cart on success =====
-//export async function mergeCartOnLogin() {
-//  const guest = getGuestCart()
-//  if (!guest.length) return
+export function updateGuestQuantity(productId: string, quantity: number) {
+  if (typeof window === "undefined") return
 
-//  try {
-//    const merged = await mergeGuestCart(guest)
-//    useCartStore.setState({ items: merged })
-//    // Clear only after successful merge
-//    clearGuestCart()
-//  } catch (err) {
-//    console.error("mergeCartOnLogin error:", err)
-    // Do NOT clear guest cart on error
-//  }
-////
+  const cart = getGuestCart()
+  const updated = cart
+    .map((item) =>
+      item.productId === productId ? { ...item, quantity } : item
+    )
+    .filter((item) => item.quantity > 0)
+
+  try {
+    localStorage.setItem("guest_cart", JSON.stringify(updated))
+  } catch (e) {
+    console.error("updateGuestQuantity error:", e)
+  }
+}
+
+export function removeGuestItem(productId: string) {
+  if (typeof window === "undefined") return
+
+  const cart = getGuestCart()
+  const updated = cart.filter((item) => item.productId !== productId)
+
+  try {
+    localStorage.setItem("guest_cart", JSON.stringify(updated))
+  } catch (e) {
+    console.error("removeGuestItem error:", e)
+  }
+}
+
 export async function mergeCartOnLogin() {
-  // فعلاً غیرفعال
-  return
+  // جلوگیری از اجرای همزمان
+  if (mergeInProgress) return
+
+  const guest = getGuestCart()
+  if (!guest.length) return
+
+  mergeInProgress = true
+  try {
+    const merged = await mergeGuestCart(guest)
+    useCartStore.setState({ items: merged })
+    clearGuestCart()
+  } catch (err) {
+    console.error("mergeCartOnLogin error:", err)
+    // در صورت خطا، سبد مهمان پاک نمی‌شود
+  } finally {
+    mergeInProgress = false
+  }
 }
