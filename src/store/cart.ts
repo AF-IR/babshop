@@ -1,25 +1,27 @@
 "use client"
 
 import { create } from "zustand"
-import * as cartApi from "@/lib/cart"
 import type { CartItem } from "@/types"
+import * as cartApi from "@/lib/cart"
 import {
   getGuestCart,
   saveGuestItem,
-  clearGuestCart,
 } from "@/lib/cart-merge"
 
 interface CartState {
   items: CartItem[]
 
-  isLoading: boolean
-  isAdding: boolean
-
   isOpen: boolean
 
-  load: () => Promise<void>
+  isLoading: boolean
+  isAdding: boolean
+  isUpdating: boolean
+  isRemoving: boolean
+  isClearing: boolean
 
-  addItem: (item: {
+  load(): Promise<void>
+
+  addItem(params: {
     productId: string
     quantity?: number
 
@@ -28,42 +30,52 @@ interface CartState {
     imageAlt?: string
     slug?: string
     price?: number
-  }) => Promise<void>
+  }): Promise<void>
 
-  removeItem: (productId: string) => Promise<void>
-
-  updateQuantity: (
+  updateQuantity(
     productId: string,
     quantity: number
-  ) => Promise<void>
+  ): Promise<void>
 
-  clearCart: () => Promise<void>
+  removeItem(
+    productId: string
+  ): Promise<void>
 
-  openCart: () => void
-  closeCart: () => void
-  toggleCart: () => void
+  clearCart(): Promise<void>
 
-  getSubtotal: () => number
-  getItemCount: () => number
+  openCart(): void
+  closeCart(): void
+  toggleCart(): void
+
+  getSubtotal(): number
+  getItemCount(): number
 }
 
 export const useCartStore = create<CartState>((set, get) => ({
-  items: [],
 
-  isLoading: false,
-  isAdding: false,
+  items: [],
 
   isOpen: false,
 
+  isLoading: false,
+  isAdding: false,
+  isUpdating: false,
+  isRemoving: false,
+  isClearing: false,
+
   async load() {
-    set({ isLoading: true })
+
+    set({
+      isLoading: true,
+    })
 
     try {
-      const serverItems = await cartApi.getCart()
 
-      if (serverItems.length > 0) {
+      const server = await cartApi.getCart()
+
+      if (server.length) {
         set({
-          items: serverItems,
+          items: server,
           isLoading: false,
         })
         return
@@ -71,14 +83,10 @@ export const useCartStore = create<CartState>((set, get) => ({
 
       const guest = getGuestCart()
 
-      const guestItems: CartItem[] = guest.map((g) => ({
+      const guestItems: CartItem[] = guest.map(g => ({
         id: crypto.randomUUID(),
 
         productId: g.productId,
-
-        variantId: g.productId,
-
-        quantity: g.quantity,
 
         name: g.productName ?? "",
 
@@ -93,40 +101,53 @@ export const useCartStore = create<CartState>((set, get) => ({
 
         price: g.price ?? 0,
 
-        lineTotal: (g.price ?? 0) * g.quantity,
+        quantity: g.quantity,
+
+        lineTotal:
+          (g.price ?? 0) * g.quantity,
       }))
 
       set({
         items: guestItems,
         isLoading: false,
       })
-    } catch (err) {
-      console.error(err)
+
+    } catch (e) {
+
+      console.error(e)
 
       set({
         isLoading: false,
       })
+
     }
+
   },
 
   async addItem(item) {
-    set({ isAdding: true })
+
+    set({
+      isAdding: true,
+    })
 
     try {
-      const items = await cartApi.addItem({
+
+      const cart = await cartApi.addItem({
         productId: item.productId,
-        quantity: item.quantity ?? 1,
+        quantity: item.quantity,
       })
 
       set({
-        items,
+        items: cart,
         isAdding: false,
       })
+
     } catch (err: any) {
+
       if (err.message === "NOT_AUTHENTICATED") {
+
         saveGuestItem({
           productId: item.productId,
-          variantId: item.productId,
           quantity: item.quantity ?? 1,
           productName: item.productName,
           imageUrl: item.imageUrl,
@@ -137,48 +158,67 @@ export const useCartStore = create<CartState>((set, get) => ({
 
         await get().load()
 
-        set({
-          isAdding: false,
-        })
-
-        return
       }
-
-      console.error(err)
 
       set({
         isAdding: false,
       })
+
     }
+
+  },
+
+  async updateQuantity(
+    productId,
+    quantity
+  ) {
+
+    set({
+      isUpdating: true,
+    })
+
+    const cart =
+      await cartApi.updateQuantity(
+        productId,
+        quantity
+      )
+
+    set({
+      items: cart,
+      isUpdating: false,
+    })
+
   },
 
   async removeItem(productId) {
-    const items = await cartApi.removeItem(productId)
 
     set({
-      items,
+      isRemoving: true,
     })
-  },
 
-  async updateQuantity(productId, quantity) {
-    const items = await cartApi.updateQuantity(
-      productId,
-      quantity
-    )
+    const cart =
+      await cartApi.removeItem(productId)
 
     set({
-      items,
+      items: cart,
+      isRemoving: false,
     })
+
   },
 
   async clearCart() {
-    await cartApi.clearCart()
 
-    clearGuestCart()
+    set({
+      isClearing: true,
+    })
+
+    await cartApi.clearCart()
 
     set({
       items: [],
+      isClearing: false,
     })
+
   },
 
   openCart() {
@@ -194,22 +234,27 @@ export const useCartStore = create<CartState>((set, get) => ({
   },
 
   toggleCart() {
-    set((state) => ({
-      isOpen: !state.isOpen,
+    set(s => ({
+      isOpen: !s.isOpen,
     }))
   },
 
   getSubtotal() {
+
     return get().items.reduce(
       (sum, item) => sum + item.lineTotal,
       0
     )
+
   },
 
   getItemCount() {
+
     return get().items.reduce(
       (sum, item) => sum + item.quantity,
       0
     )
+
   },
+
 }))
