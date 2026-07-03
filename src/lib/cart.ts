@@ -14,8 +14,7 @@ export async function getCart(): Promise<CartItem[]> {
     .select(`
       id,
       quantity,
-      product_id,
-      products (
+      product:products(
         id,
         title,
         slug,
@@ -30,28 +29,39 @@ export async function getCart(): Promise<CartItem[]> {
     return []
   }
 
-  return (data ?? []).map((item: any) => ({
-    id: item.id,
-    productId: item.product_id,
-    variantId: item.product_id,
-    name: item.products.title,
+  return (data ?? []).map((row: any) => ({
+    id: row.id,
+
+    productId: row.product.id,
+
+    variantId: row.product.id,
+
+    quantity: row.quantity,
+
+    name: row.product.title,
+
     variantName: "",
-    slug: item.products.slug,
+
     image: {
-      url: item.products.image,
-      alt: item.products.title,
+      url: row.product.image,
+      alt: row.product.title,
     },
-    price: item.products.price,
-    quantity: item.quantity,
-    lineTotal: item.quantity * item.products.price,
+
+    slug: row.product.slug,
+
+    price: row.product.price,
+
+    lineTotal: row.product.price * row.quantity,
   }))
 }
 
-export async function addItem(params: {
+export async function addItem({
+  productId,
+  quantity = 1,
+}: {
   productId: string
   quantity?: number
-}): Promise<CartItem[]> {
-
+}) {
   const {
     data: { user },
   } = await getUser()
@@ -59,43 +69,34 @@ export async function addItem(params: {
   if (!user)
     throw new Error("NOT_AUTHENTICATED")
 
-  const quantity = params.quantity ?? 1
-
   const { data: existing } = await supabase
     .from("cart_items")
     .select("id,quantity")
     .eq("user_id", user.id)
-    .eq("product_id", params.productId)
+    .eq("product_id", productId)
     .maybeSingle()
 
   if (existing) {
-
     await supabase
       .from("cart_items")
       .update({
         quantity: existing.quantity + quantity,
       })
       .eq("id", existing.id)
-
   } else {
-
     await supabase
       .from("cart_items")
       .insert({
         user_id: user.id,
-        product_id: params.productId,
+        product_id: productId,
         quantity,
       })
-
   }
 
   return getCart()
 }
 
-export async function removeItem(
-  productId: string
-): Promise<CartItem[]> {
-
+export async function removeItem(productId: string) {
   const {
     data: { user },
   } = await getUser()
@@ -114,8 +115,7 @@ export async function removeItem(
 export async function updateQuantity(
   productId: string,
   quantity: number
-): Promise<CartItem[]> {
-
+) {
   const {
     data: { user },
   } = await getUser()
@@ -138,7 +138,6 @@ export async function updateQuantity(
 }
 
 export async function clearCart() {
-
   const {
     data: { user },
   } = await getUser()
@@ -149,51 +148,4 @@ export async function clearCart() {
     .from("cart_items")
     .delete()
     .eq("user_id", user.id)
-}
-
-export async function mergeGuestCart(
-  guestItems: any[]
-): Promise<CartItem[]> {
-
-  const {
-    data: { user },
-  } = await getUser()
-
-  if (!user)
-    return []
-
-  for (const guest of guestItems) {
-
-    const { data: existing } = await supabase
-      .from("cart_items")
-      .select("id,quantity")
-      .eq("user_id", user.id)
-      .eq("product_id", guest.productId)
-      .maybeSingle()
-
-    if (existing) {
-
-      await supabase
-        .from("cart_items")
-        .update({
-          quantity:
-            existing.quantity + guest.quantity,
-        })
-        .eq("id", existing.id)
-
-    } else {
-
-      await supabase
-        .from("cart_items")
-        .insert({
-          user_id: user.id,
-          product_id: guest.productId,
-          quantity: guest.quantity,
-        })
-
-    }
-
-  }
-
-  return getCart()
 }
