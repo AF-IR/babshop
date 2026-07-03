@@ -34,12 +34,9 @@ export async function getCart(): Promise<CartItem[]> {
   console.log(data)
 
   return (data ?? []).map((row: any) => {
-
     console.log("ROW =", row)
-    // === خطوط اضافه شده طبق دستور ===
     console.log("PRODUCT =", row.products)
     console.log(Array.isArray(row.products))
-    // ================================
 
     return {
       id: row.id,
@@ -67,8 +64,7 @@ export async function addItem(params: {
     data: { user },
   } = await getUser()
 
-  if (!user)
-    throw new Error("NOT_AUTHENTICATED")
+  if (!user) throw new Error("NOT_AUTHENTICATED")
 
   const quantity = params.quantity ?? 1
 
@@ -99,24 +95,18 @@ export async function addItem(params: {
   return getCart()
 }
 
-export async function updateQuantity(
-  productId: string,
-  quantity: number
-) {
+export async function updateQuantity(productId: string, quantity: number) {
   const {
     data: { user },
   } = await getUser()
 
   if (!user) return []
 
-  if (quantity <= 0)
-    return removeItem(productId)
+  if (quantity <= 0) return removeItem(productId)
 
   await supabase
     .from("cart_items")
-    .update({
-      quantity,
-    })
+    .update({ quantity })
     .eq("user_id", user.id)
     .eq("product_id", productId)
 
@@ -146,8 +136,47 @@ export async function clearCart() {
 
   if (!user) return
 
-  await supabase
-    .from("cart_items")
-    .delete()
-    .eq("user_id", user.id)
+  await supabase.from("cart_items").delete().eq("user_id", user.id)
+}
+
+// ========== MERGE GUEST CART ==========
+export async function mergeGuestCart(
+  guestItems: {
+    productId: string
+    quantity: number
+  }[]
+) {
+  const {
+    data: { user },
+  } = await getUser()
+
+  if (!user) throw new Error("NOT_AUTHENTICATED")
+
+  for (const item of guestItems) {
+    const { data: exists } = await supabase
+      .from("cart_items")
+      .select("id,quantity")
+      .eq("user_id", user.id)
+      .eq("product_id", item.productId)
+      .maybeSingle()
+
+    if (exists) {
+      await supabase
+        .from("cart_items")
+        .update({
+          quantity: exists.quantity + item.quantity,
+        })
+        .eq("id", exists.id)
+    } else {
+      await supabase
+        .from("cart_items")
+        .insert({
+          user_id: user.id,
+          product_id: item.productId,
+          quantity: item.quantity,
+        })
+    }
+  }
+
+  return getCart()
 }
