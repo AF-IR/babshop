@@ -4,13 +4,20 @@ import { redirects as redirectRules } from "./src/lib/redirects";
 
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
+import type { NextConfig } from "next";
+
 const nextConfig: NextConfig = {
   images: {
-    // Add remote image domains here when using real product images
-    // remotePatterns: [
-    //   { protocol: "https", hostname: "cdn.example.com" },
-    // ],
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "s33.picofile.com",
+      },
+    ],
   },
+};
+
+export default nextConfig;
 
   // Redirects are defined in src/lib/redirects.ts — edit there.
   async redirects() {
