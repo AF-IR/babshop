@@ -2,7 +2,6 @@ import { supabase } from "@/lib/supabase"
 import { getUser } from "@/lib/auth"
 import type { CartItem } from "@/types"
 
-// ==================== getCart بازنویسی شده ====================
 export async function getCart(): Promise<CartItem[]> {
   const {
     data: { user },
@@ -10,66 +9,55 @@ export async function getCart(): Promise<CartItem[]> {
 
   if (!user) return []
 
-  // دریافت آیتم‌های سبد
-  const { data: cartItems, error: cartError } = await supabase
+  const { data, error } = await supabase
     .from("cart_items")
-    .select("id, product_id, quantity")
+    .select(`
+      id,
+      product_id,
+      quantity,
+      products (
+        id,
+        title,
+        slug,
+        image,
+        price
+      )
+    `)
     .eq("user_id", user.id)
 
-  if (cartError) {
-    console.error(cartError)
+  if (error) {
+    console.error("Supabase Error:", error)
     return []
   }
 
-  if (!cartItems?.length) return []
+  console.log("========== getCart RAW ==========")
+  console.log(data)
 
-  // لیست شناسه محصولات
-  const productIds = cartItems.map((i) => i.product_id)
+  return (data ?? []).map((row: any) => {
 
-  // دریافت اطلاعات محصولات
-  const { data: products, error: productError } = await supabase
-    .from("products")
-    .select("id, title, slug, image, price")
-    .in("id", productIds)
-
-  if (productError) {
-    console.error(productError)
-    return []
-  }
-
-  // ساخت Map برای سرعت O(1)
-  const productMap = new Map(
-    (products ?? []).map((p) => [p.id, p])
-  )
-
-  return cartItems.map((item) => {
-    const product = productMap.get(item.product_id)
+    console.log("ROW =", row)
+    // === خطوط اضافه شده طبق دستور ===
+    console.log("PRODUCT =", row.products)
+    console.log(Array.isArray(row.products))
+    // ================================
 
     return {
-      id: item.id,
-      variantId: item.product_id,
-      productId: item.product_id,
-
-      name: product?.title ?? "Unknown Product",
-
-      slug: product?.slug ?? "",
-
+      id: row.id,
+      variantId: row.product_id,
+      productId: row.product_id,
+      name: row.products?.title ?? "NULL",
+      slug: row.products?.slug ?? "",
       variantName: "Default",
-
       image: {
-        url: product?.image ?? "",
-        alt: product?.title ?? "",
+        url: row.products?.image ?? "",
+        alt: row.products?.title ?? "",
       },
-
-      price: product?.price ?? 0,
-
-      quantity: item.quantity,
-
-      lineTotal: (product?.price ?? 0) * item.quantity,
+      price: row.products?.price ?? 0,
+      quantity: row.quantity,
+      lineTotal: (row.products?.price ?? 0) * row.quantity,
     }
   })
 }
-// =============================================================
 
 export async function addItem(params: {
   productId: string
