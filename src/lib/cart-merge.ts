@@ -58,17 +58,21 @@ export function clearGuestCart() {
 }
 
 // ===== FIX: only clear guest cart on success =====
-export async function mergeCartOnLogin() {
-  const guest = getGuestCart()
-  if (!guest.length) return
+//export async function mergeCartOnLogin() {
+//  const guest = getGuestCart()
+//  if (!guest.length) return
 
-  try {
-    const merged = await mergeGuestCart(guest)
-    useCartStore.setState({ items: merged })
-    // Clear only after successful merge
-    clearGuestCart()
-  } catch (err) {
-    console.error("mergeCartOnLogin error:", err)
+//  try {
+//    const merged = await mergeGuestCart(guest)
+//    useCartStore.setState({ items: merged })
+//    // Clear only after successful merge
+//    clearGuestCart()
+//  } catch (err) {
+//    console.error("mergeCartOnLogin error:", err)
     // Do NOT clear guest cart on error
-  }
+//  }
+////
+export async function mergeCartOnLogin() {
+  // فعلاً غیرفعال
+  return
 }
