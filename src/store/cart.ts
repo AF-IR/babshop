@@ -149,6 +149,8 @@ export const useCartStore = create<CartState>((set, get) => ({
       if (err.message === "NOT_AUTHENTICATED") {
 
         saveGuestItem({
+          variantId: item.productId,  // <-- اضافه شد
+
           productId: item.productId,
           quantity: item.quantity ?? 1,
           productName: item.productName,
