@@ -123,6 +123,20 @@ export function ProductDetailView({
     setIsAdding(false)
   }
 }
+  async function handleToggleWishlist() {
+  try {
+    if (isWishlisted) {
+      await removeFromWishlist(product.id)
+      toast.success("Removed from wishlist")
+    } else {
+      await addToWishlist(product.id)
+      toast.success("Added to wishlist")
+    }
+  } catch (err) {
+    console.error(err)
+    toast.error("Operation failed")
+  }
+}
   const breadcrumbLd = breadcrumbJsonLd([
     { name: "Shop", href: "/shop" },
     ...categoryAncestors.map((c) => ({ name: c.name, href: `/${c.slug}` })),
