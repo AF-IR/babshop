@@ -96,50 +96,33 @@ export function ProductDetailView({
     variant.inventory.allowBackorder
 
   async function handleAddToCart() {
-    if (isAdding || isAddingStore) return
-    setIsAdding(true)
+  if (isAdding || isAddingStore) return
 
-    try {
-      await addToCart({
-        variantId: variant.id,
-        productId: product.id,
-        quantity,
-        productName: product.name,
-        variantName: variant.name,
-        imageUrl: product.images[0]?.url || "",
-        imageAlt: product.images[0]?.alt || product.name,
-        slug: product.slug,
-        price: variant.price,
-        currency: variant.currency,
-      })
+  setIsAdding(true)
 
-      openCart()
-      toast.success("Added to cart")
-    } catch (err: any) {
-      if (err?.message !== "NOT_AUTHENTICATED") {
-        toast.error("Failed to add to cart")
-      }
-      console.error(err)
-    } finally {
-      setIsAdding(false)
+  try {
+    await addToCart({
+      productId: product.id,
+      quantity,
+      productName: product.name,
+      imageUrl: product.images[0]?.url ?? "",
+      imageAlt: product.images[0]?.alt ?? product.name,
+      slug: product.slug,
+      price: variant.price,
+    })
+
+    openCart()
+    toast.success("Added to cart")
+  } catch (err: any) {
+    if (err?.message !== "NOT_AUTHENTICATED") {
+      toast.error("Failed to add to cart")
     }
-  }
 
-  async function handleToggleWishlist() {
-    try {
-      if (isWishlisted) {
-        await removeFromWishlist(product.id)
-        toast.success("Removed from wishlist")
-      } else {
-        await addToWishlist(product.id)
-        toast.success("Added to wishlist")
-      }
-    } catch (err) {
-      console.error(err)
-      toast.error("Operation failed")
-    }
+    console.error(err)
+  } finally {
+    setIsAdding(false)
   }
-
+}
   const breadcrumbLd = breadcrumbJsonLd([
     { name: "Shop", href: "/shop" },
     ...categoryAncestors.map((c) => ({ name: c.name, href: `/${c.slug}` })),
