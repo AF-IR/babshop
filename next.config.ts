@@ -4,8 +4,6 @@ import { redirects as redirectRules } from "./src/lib/redirects";
 
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
-import type { NextConfig } from "next";
-
 const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
@@ -15,11 +13,8 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-};
 
-export default nextConfig;
-
-  // Redirects are defined in src/lib/redirects.ts — edit there.
+  // Redirects are defined in src/lib/redirects.ts
   async redirects() {
     return redirectRules;
   },
