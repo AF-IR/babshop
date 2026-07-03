@@ -6,192 +6,193 @@ export async function getCart(): Promise<CartItem[]> {
   const {
     data: { user },
   } = await getUser()
+
   if (!user) return []
 
   const { data, error } = await supabase
     .from("cart_items")
     .select(`
       id,
-      product_id,
-      variant_id,
       quantity,
-      products (name, slug, images),
-      variants (name, price, currency)
+      product_id,
+      products (
+        id,
+        title,
+        slug,
+        image,
+        price
+      )
     `)
     .eq("user_id", user.id)
 
   if (error) {
-    console.error("getCart error:", error)
+    console.error(error)
     return []
   }
 
-  return data.map((item: any) => ({
+  return (data ?? []).map((item: any) => ({
     id: item.id,
-    variantId: item.variant_id,
     productId: item.product_id,
+    variantId: item.product_id,
+    name: item.products.title,
+    variantName: "",
+    slug: item.products.slug,
+    image: {
+      url: item.products.image,
+      alt: item.products.title,
+    },
+    price: item.products.price,
     quantity: item.quantity,
-    name: item.products?.name || "",
-    variantName: item.variants?.name || "",
-    image: item.products?.images?.[0] ?? { url: "", alt: "" },
-    slug: item.products?.slug || "",
-    price: item.variants?.price || 0,
-    lineTotal: (item.variants?.price || 0) * item.quantity,
+    lineTotal: item.quantity * item.products.price,
   }))
 }
 
 export async function addItem(params: {
-  variantId: string
   productId: string
   quantity?: number
 }): Promise<CartItem[]> {
+
   const {
     data: { user },
   } = await getUser()
-  if (!user) {
+
+  if (!user)
     throw new Error("NOT_AUTHENTICATED")
-  }
 
   const quantity = params.quantity ?? 1
 
-  const { data: existing, error: fetchError } = await supabase
+  const { data: existing } = await supabase
     .from("cart_items")
-    .select("id, quantity")
+    .select("id,quantity")
     .eq("user_id", user.id)
-    .eq("variant_id", params.variantId)
+    .eq("product_id", params.productId)
     .maybeSingle()
 
-  if (fetchError) {
-    console.error("fetch existing cart item error:", fetchError)
-    throw fetchError
-  }
-
   if (existing) {
-    const { error: updateError } = await supabase
+
+    await supabase
       .from("cart_items")
-      .update({ quantity: existing.quantity + quantity })
+      .update({
+        quantity: existing.quantity + quantity,
+      })
       .eq("id", existing.id)
 
-    if (updateError) {
-      console.error("update cart item error:", updateError)
-      throw updateError
-    }
   } else {
-    const { error: insertError } = await supabase
+
+    await supabase
       .from("cart_items")
       .insert({
         user_id: user.id,
         product_id: params.productId,
-        variant_id: params.variantId,
         quantity,
       })
 
-    if (insertError) {
-      console.error("insert cart item error:", insertError)
-      throw insertError
-    }
   }
 
   return getCart()
 }
 
-export async function removeItem(variantId: string): Promise<CartItem[]> {
+export async function removeItem(
+  productId: string
+): Promise<CartItem[]> {
+
   const {
     data: { user },
   } = await getUser()
+
   if (!user) return []
 
-  const { error } = await supabase
+  await supabase
     .from("cart_items")
     .delete()
     .eq("user_id", user.id)
-    .eq("variant_id", variantId)
-
-  if (error) {
-    console.error("removeItem error:", error)
-    throw error
-  }
+    .eq("product_id", productId)
 
   return getCart()
 }
 
 export async function updateQuantity(
-  variantId: string,
+  productId: string,
   quantity: number
 ): Promise<CartItem[]> {
+
   const {
     data: { user },
   } = await getUser()
+
   if (!user) return []
 
-  const { error } = await supabase
-    .from("cart_items")
-    .update({ quantity })
-    .eq("user_id", user.id)
-    .eq("variant_id", variantId)
-
-  if (error) {
-    console.error("updateQuantity error:", error)
-    throw error
+  if (quantity <= 0) {
+    return removeItem(productId)
   }
+
+  await supabase
+    .from("cart_items")
+    .update({
+      quantity,
+    })
+    .eq("user_id", user.id)
+    .eq("product_id", productId)
 
   return getCart()
 }
 
-export async function clearCart(): Promise<void> {
+export async function clearCart() {
+
   const {
     data: { user },
   } = await getUser()
+
   if (!user) return
 
-  const { error } = await supabase
+  await supabase
     .from("cart_items")
     .delete()
     .eq("user_id", user.id)
-
-  if (error) {
-    console.error("clearCart error:", error)
-    throw error
-  }
 }
 
-export async function mergeGuestCart(guestItems: any[]): Promise<CartItem[]> {
+export async function mergeGuestCart(
+  guestItems: any[]
+): Promise<CartItem[]> {
+
   const {
     data: { user },
   } = await getUser()
-  if (!user || !guestItems.length) return getCart()
+
+  if (!user)
+    return []
 
   for (const guest of guestItems) {
-    try {
-      const { data: existing, error: fetchError } = await supabase
+
+    const { data: existing } = await supabase
+      .from("cart_items")
+      .select("id,quantity")
+      .eq("user_id", user.id)
+      .eq("product_id", guest.productId)
+      .maybeSingle()
+
+    if (existing) {
+
+      await supabase
         .from("cart_items")
-        .select("id, quantity")
-        .eq("user_id", user.id)
-        .eq("variant_id", guest.variantId)
-        .maybeSingle()
+        .update({
+          quantity:
+            existing.quantity + guest.quantity,
+        })
+        .eq("id", existing.id)
 
-      if (fetchError) {
-        console.error("merge guest fetch error:", fetchError)
-        continue
-      }
+    } else {
 
-      if (existing) {
-        await supabase
-          .from("cart_items")
-          .update({ quantity: existing.quantity + guest.quantity })
-          .eq("id", existing.id)
-      } else {
-        await supabase
-          .from("cart_items")
-          .insert({
-            user_id: user.id,
-            product_id: guest.productId,
-            variant_id: guest.variantId,
-            quantity: guest.quantity,
-          })
-      }
-    } catch (err) {
-      console.error("mergeGuestCart item error:", err)
+      await supabase
+        .from("cart_items")
+        .insert({
+          user_id: user.id,
+          product_id: guest.productId,
+          quantity: guest.quantity,
+        })
+
     }
+
   }
 
   return getCart()
