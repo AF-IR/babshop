@@ -86,6 +86,8 @@ export const useCartStore = create<CartState>((set, get) => ({
       const guestItems: CartItem[] = guest.map(g => ({
         id: crypto.randomUUID(),
 
+        variantId: g.productId,
+
         productId: g.productId,
 
         name: g.productName ?? "",
