@@ -26,25 +26,34 @@ export async function getCart(): Promise<CartItem[]> {
     .eq("user_id", user.id)
 
   if (error) {
-    console.error(error)
+    console.error("Supabase Error:", error)
     return []
   }
 
-  return (data ?? []).map((row: any) => ({
-    id: row.id,
-    variantId: row.product_id,
-    productId: row.product_id,
-    name: row.products.title,
-    slug: row.products.slug,
-    variantName: "Default",
-    image: {
-      url: row.products.image,
-      alt: row.products.title,
-    },
-    price: row.products.price,
-    quantity: row.quantity,
-    lineTotal: row.products.price * row.quantity,
-  }))
+  console.log("========== getCart RAW ==========")
+  console.log(data)
+
+  return (data ?? []).map((row: any) => {
+
+    console.log("ROW =", row)
+    console.log("PRODUCT =", row.products)
+
+    return {
+      id: row.id,
+      variantId: row.product_id,
+      productId: row.product_id,
+      name: row.products?.title ?? "NULL",
+      slug: row.products?.slug ?? "",
+      variantName: "Default",
+      image: {
+        url: row.products?.image ?? "",
+        alt: row.products?.title ?? "",
+      },
+      price: row.products?.price ?? 0,
+      quantity: row.quantity,
+      lineTotal: (row.products?.price ?? 0) * row.quantity,
+    }
+  })
 }
 
 export async function addItem(params: {
