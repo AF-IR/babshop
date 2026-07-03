@@ -36,7 +36,10 @@ export async function getCart(): Promise<CartItem[]> {
   return (data ?? []).map((row: any) => {
 
     console.log("ROW =", row)
+    // === خطوط اضافه شده طبق دستور ===
     console.log("PRODUCT =", row.products)
+    console.log(Array.isArray(row.products))
+    // ================================
 
     return {
       id: row.id,
