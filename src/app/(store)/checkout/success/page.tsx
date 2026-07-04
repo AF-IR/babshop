@@ -62,9 +62,11 @@ function CheckoutSuccessContent() {
                 <span>{formatDate(order.created_at)}</span>
               </div>
               <Separator />
-              {/* استفاده از آرایه خالی در صورت عدم وجود items */}
-              {(order.items ?? []).map((item) => (
-                <div key={item.id} className="flex justify-between text-sm">
+              {(order.items ?? []).map((item, index) => (
+                <div
+                  key={`${item.product_id}-${index}`}
+                  className="flex justify-between text-sm"
+                >
                   <span className="text-muted-foreground">
                     {item.product_title} &times; {item.quantity}
                   </span>
@@ -78,11 +80,7 @@ function CheckoutSuccessContent() {
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Shipping</span>
-                <span>
-                  {order.shipping === 0 || !order.shipping
-                    ? "Free"
-                    : formatPrice(order.shipping)}
-                </span>
+                <span>{order.shipping === 0 ? "Free" : formatPrice(order.shipping)}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Tax</span>
