@@ -16,9 +16,8 @@ export default function OrdersPage() {
 
   if (!isReady) return null
 
-  const userOrders = user
-    ? orders.filter((o) => o.customerEmail === user.email)
-    : orders
+  // ویرایش اول: حذف فیلتر بر اساس customerEmail
+  const userOrders = orders
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6 lg:px-8">
@@ -42,21 +41,17 @@ export default function OrdersPage() {
               <CardContent className="pt-6">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <p className="text-sm font-medium">{order.orderNumber}</p>
-                    <p className="text-xs text-muted-foreground">{formatDate(order.createdAt)}</p>
+                    {/* ویرایش دوم: orderNumber → order_number */}
+                    <p className="text-sm font-medium">{order.order_number}</p>
+                    {/* createdAt → created_at */}
+                    <p className="text-xs text-muted-foreground">{formatDate(order.created_at)}</p>
                   </div>
                   <div className="flex items-center gap-3">
                     <OrderStatusBadge status={order.status} />
                     <span className="text-sm font-medium">{formatPrice(order.total)}</span>
                   </div>
                 </div>
-                <div className="mt-4 text-sm text-muted-foreground">
-                  {order.items.map((item) => (
-                    <span key={item.id} className="mr-3">
-                      {item.name} &times; {item.quantity}
-                    </span>
-                  ))}
-                </div>
+                {/* حذف کامل بخش نمایش آیتم‌ها */}
               </CardContent>
             </Card>
           ))}
