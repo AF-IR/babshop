@@ -55,11 +55,11 @@ function CheckoutSuccessContent() {
             <CardContent className="pt-6 space-y-4">
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Order number</span>
-                <span className="font-medium">{order.orderNumber}</span>
+                <span className="font-medium">{order.order_number}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Date</span>
-                <span>{formatDate(order.createdAt)}</span>
+                <span>{formatDate(order.created_at)}</span>
               </div>
               <Separator />
               {order.items.map((item) => (
