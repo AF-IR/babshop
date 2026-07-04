@@ -185,3 +185,12 @@ export async function createAddress(
     return data
 
 }
+// ===== Compatibility =====
+
+export async function addAddress(values: any) {
+  return createAddress(values)
+}
+
+export async function removeAddress(id: string) {
+  return deleteAddress(id)
+}
