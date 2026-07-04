@@ -74,19 +74,6 @@ function CheckoutSuccessContent() {
                 </div>
               ))}
               <Separator />
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Subtotal</span>
-                <span>{formatPrice(order.subtotal ?? 0)}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Shipping</span>
-                <span>{order.shipping === 0 ? "Free" : formatPrice(order.shipping)}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Tax</span>
-                <span>{formatPrice(order.tax ?? 0)}</span>
-              </div>
-              <Separator />
               <div className="flex justify-between font-medium">
                 <span>Total</span>
                 <span>{formatPrice(order.total)}</span>
