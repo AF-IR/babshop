@@ -8,15 +8,11 @@ export async function createOrder(order: any) {
     .single()
 
   if (error) throw error
-
   return data
 }
 
 export async function createOrderItems(items: any[]) {
-  const { error } = await supabase
-    .from("order_items")
-    .insert(items)
-
+  const { error } = await supabase.from("order_items").insert(items)
   if (error) throw error
 }
 
@@ -28,7 +24,6 @@ export async function createPayment(payment: any) {
     .single()
 
   if (error) throw error
-
   return data
 }
 
