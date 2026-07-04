@@ -14,7 +14,13 @@ export interface OrderItem {
 export interface OrderData {
   id: string
   order_number: string
-  status: string
+  status:
+    | "pending"
+    | "processing"
+    | "paid"
+    | "shipped"
+    | "delivered"
+    | "cancelled"
   payment_status: string
   total: number
   created_at: string
