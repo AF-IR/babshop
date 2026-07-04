@@ -12,8 +12,7 @@ import StepSuccess from "./step-success"
 
 export default function CheckoutStepper(){
 
-    const [step,setStep]=useState(1)
-
+    const [step, setStep] = useState<1 | 2 | 3 | 4>(1)
     return(
 
         <div className="mx-auto max-w-5xl">
