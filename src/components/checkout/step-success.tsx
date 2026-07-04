@@ -1,25 +1,25 @@
 "use client"
 
-export default function StepSuccess(){
+export default function StepSuccess() {
 
-    return(
+  return (
 
-        <div className="py-20 text-center">
+    <div className="rounded-xl border bg-white p-10 text-center">
 
-            <h2 className="text-2xl font-bold">
+      <h2 className="text-3xl font-bold">
 
-                سفارش با موفقیت ثبت شد.
+        سفارش ثبت شد
 
-            </h2>
+      </h2>
 
-            <p className="mt-4 text-muted-foreground">
+      <p className="mt-4 text-gray-500">
 
-                بعد از پرداخت به این صفحه هدایت خواهید شد.
+        پس از اتصال درگاه پرداخت این صفحه تکمیل خواهد شد.
 
-            </p>
+      </p>
 
-        </div>
+    </div>
 
-    )
+  )
 
 }
