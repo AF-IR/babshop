@@ -4,6 +4,7 @@ import { redirects as redirectRules } from "./src/lib/redirects";
 
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
+
 const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
