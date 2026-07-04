@@ -2,32 +2,38 @@
 
 import AddressSelector from "./address-selector"
 
-export default function StepAddress() {
+interface StepAddressProps {
+  next: () => void
+}
 
-    return (
+export default function StepAddress({
+  next,
+}: StepAddressProps) {
+  return (
+    <div className="space-y-6">
 
-        <div className="space-y-6">
+      <div>
+        <h2 className="text-xl font-bold">
+          انتخاب آدرس
+        </h2>
 
-            <div>
+        <p className="mt-2 text-muted-foreground">
+          آدرس دریافت سفارش را انتخاب کنید.
+        </p>
+      </div>
 
-                <h2 className="text-xl font-bold">
+      <AddressSelector />
 
-                    انتخاب آدرس
+      <div className="flex justify-end">
+        <button
+          type="button"
+          onClick={next}
+          className="rounded-lg bg-primary px-6 py-3 text-primary-foreground"
+        >
+          ادامه
+        </button>
+      </div>
 
-                </h2>
-
-                <p className="text-muted-foreground mt-2">
-
-                    لطفاً آدرس تحویل سفارش را انتخاب کنید.
-
-                </p>
-
-            </div>
-
-            <AddressSelector/>
-
-        </div>
-
-    )
-
+    </div>
+  )
 }
