@@ -1,57 +1,65 @@
 "use client"
 
-import Link from "next/link"
+import { useEffect, useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Package } from "lucide-react"
 import { PageHeader } from "@/components/ui/page-header"
 import { EmptyState } from "@/components/ui/empty-state"
-import { OrderStatusBadge } from "@/components/ui/order-status-badge"
 import { useAuthGuard } from "@/hooks/use-auth-guard"
-import { useOrdersStore } from "@/store/orders"
-import { formatPrice, formatDate } from "@/lib/utils"
+import { getOrders } from "@/lib/orders"
 
 export default function OrdersPage() {
   const { user, isReady } = useAuthGuard()
-  const orders = useOrdersStore((s) => s.orders)
 
-  if (!isReady) return null
+  const [orders, setOrders] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
 
-  // ویرایش اول: فیلتر بر اساس customerEmail حذف شد
-  const userOrders = orders
+  useEffect(() => {
+    async function load() {
+      if (!user) return
+
+      const data = await getOrders(user.id)
+
+      setOrders(data)
+      setLoading(false)
+    }
+
+    if (isReady) load()
+  }, [isReady, user])
+
+  if (!isReady || loading) return null
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6 lg:px-8">
+    <div className="mx-auto max-w-3xl px-4 py-16">
       <PageHeader
         title="Order History"
-        description={userOrders.length > 0 ? `${userOrders.length} ${userOrders.length === 1 ? "order" : "orders"}` : undefined}
+        description={`${orders.length} orders`}
       />
 
-      {userOrders.length === 0 ? (
+      {orders.length === 0 ? (
         <EmptyState
           icon={Package}
-          title="No orders yet"
-          description="When you place an order, it will appear here."
-          actionLabel="Start Shopping"
+          title="No orders"
+          description="You haven't placed any orders yet."
           actionHref="/shop"
+          actionLabel="Start Shopping"
         />
       ) : (
-        <div className="mt-8 space-y-4">
-          {userOrders.map((order) => (
+        <div className="space-y-4 mt-8">
+          {orders.map((order) => (
             <Card key={order.id}>
               <CardContent className="pt-6">
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    {/* ویرایش دوم: orderNumber → order_number */}
-                    <p className="text-sm font-medium">{order.order_number}</p>
-                    {/* createdAt → created_at */}
-                    <p className="text-xs text-muted-foreground">{formatDate(order.created_at)}</p>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <OrderStatusBadge status={order.status} />
-                    <span className="text-sm font-medium">{formatPrice(order.total)}</span>
-                  </div>
-                </div>
-                {/* حذف کامل بخش نمایش آیتم‌ها (موقتاً) */}
+                <p className="font-semibold">
+                  {order.order_number}
+                </p>
+
+                <p className="text-sm text-muted-foreground">
+                  Status: {order.status}
+                </p>
+
+                <p className="text-sm">
+                  Total: {order.total.toLocaleString()}
+                </p>
               </CardContent>
             </Card>
           ))}
