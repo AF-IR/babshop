@@ -16,7 +16,7 @@ export default function OrdersPage() {
 
   if (!isReady) return null
 
-  // ویرایش اول: حذف فیلتر بر اساس customerEmail
+  // ویرایش اول: فیلتر بر اساس customerEmail حذف شد
   const userOrders = orders
 
   return (
@@ -51,7 +51,7 @@ export default function OrdersPage() {
                     <span className="text-sm font-medium">{formatPrice(order.total)}</span>
                   </div>
                 </div>
-                {/* حذف کامل بخش نمایش آیتم‌ها */}
+                {/* حذف کامل بخش نمایش آیتم‌ها (موقتاً) */}
               </CardContent>
             </Card>
           ))}
