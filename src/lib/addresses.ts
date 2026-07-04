@@ -19,9 +19,10 @@ export async function getAddresses() {
     return []
   }
 
-  // تبدیل به camelCase برای استفاده در کامپوننت‌ها
+  // تبدیل به camelCase و اضافه کردن فیلد type
   return (data ?? []).map((a) => ({
     id: a.id,
+    type: a.type || "shipping", // اگر در دیتابیس نبود، مقدار پیش‌فرض
     firstName: a.first_name,
     lastName: a.last_name,
     line1: a.line1,
@@ -30,6 +31,7 @@ export async function getAddresses() {
     state: a.state,
     postalCode: a.postal_code,
     country: a.country,
+    phone: a.phone, // اگر موجود باشد
     isDefault: a.is_default,
   }))
 }
