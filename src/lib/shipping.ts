@@ -1,49 +1,58 @@
-export interface ShippingOption {
+import { supabase } from "@/lib/supabase"
+
+export interface ShippingMethod {
+
   id: string
+
   title: string
+
+  type: "fixed" | "cod" | "free"
+
   price: number
-  cod: boolean
+
   estimatedDays: string
+
 }
 
-export interface ShippingResult {
-  available: ShippingOption[]
-  defaultMethod: string
-}
+export async function getShippingMethods(
+  boxCount: number
+): Promise<ShippingMethod[]> {
 
-export function calculateShipping(itemCount: number): ShippingResult {
-  const options: ShippingOption[] = []
+  const { data, error } = await supabase
 
-  // اگر سه کالا یا کمتر باشد
-  if (itemCount <= 3) {
-    options.push({
-      id: "post",
-      title: "پست پیشتاز",
-      price: 90000,
-      cod: false,
-      estimatedDays: "۳ تا ۵ روز کاری",
-    })
+    .from("shipping_rules")
 
-    options.push({
-      id: "tipax",
-      title: "تیپاکس (پس کرایه)",
-      price: 0,
-      cod: true,
-      estimatedDays: "۱ تا ۳ روز کاری",
-    })
-  } else {
-    // بیشتر از سه کالا
-    options.push({
-      id: "tipax",
-      title: "تیپاکس (پس کرایه)",
-      price: 0,
-      cod: true,
-      estimatedDays: "۱ تا ۳ روز کاری",
-    })
-  }
+    .select("*")
 
-  return {
-    available: options,
-    defaultMethod: options[0].id,
-  }
+    .eq("active", true)
+
+    .order("price")
+
+  if (error)
+    throw error
+
+  const methods = (data ?? []).filter(rule => {
+
+    if (rule.max_boxes == null)
+      return true
+
+    return boxCount <= rule.max_boxes
+
+  })
+
+  return methods.map(rule => ({
+
+    id: rule.id,
+
+    title: rule.title,
+
+    type: rule.type,
+
+    price: rule.price,
+
+    estimatedDays:
+      rule.estimated_days ?? "",
+
+  }))
+
 }
