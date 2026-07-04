@@ -24,17 +24,28 @@ export interface OrderData {
 
 interface OrdersStore {
   orders: OrderData[]
+
   setOrders: (orders: OrderData[]) => void
+
   addOrder: (order: OrderData) => void
+
   clearOrders: () => void
+
+  getOrderById: (id: string) => OrderData | undefined
 }
 
-export const useOrdersStore = create<OrdersStore>((set) => ({
+export const useOrdersStore = create<OrdersStore>((set, get) => ({
   orders: [],
+
   setOrders: (orders) => set({ orders }),
+
   addOrder: (order) =>
     set((state) => ({
       orders: [order, ...state.orders],
     })),
+
   clearOrders: () => set({ orders: [] }),
+
+  getOrderById: (id) =>
+    get().orders.find((o) => o.id === id),
 }))
