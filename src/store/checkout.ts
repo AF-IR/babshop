@@ -6,56 +6,148 @@ export type ShippingMethod =
   | "post"
   | "tipax"
 
-interface CheckoutState {
+export interface CheckoutAddress {
 
-  addressId: string | null
+  id: string
 
-  shippingMethod: ShippingMethod | null
+  first_name: string
 
-  paymentMethod: "zarinpal" | null
+  last_name: string
 
-  notes: string
+  line1: string
 
-  setAddress(id: string) : void
+  line2?: string
 
-  setShipping(method: ShippingMethod): void
+  city: string
 
-  setPayment(method: "zarinpal"): void
+  state: string
 
-  setNotes(notes: string): void
+  postal_code: string
 
-  reset(): void
+  country: string
+
+  is_default?: boolean
 
 }
 
-export const useCheckoutStore = create<CheckoutState>((set)=>({
+interface CheckoutStore {
 
-    addressId:null,
+  selectedAddress: CheckoutAddress | null
 
-    shippingMethod:null,
+  shippingMethod: ShippingMethod | null
 
-    paymentMethod:"zarinpal",
+  shippingPrice: number
 
-    notes:"",
+  paymentMethod: string | null
 
-    setAddress:(id)=>set({addressId:id}),
+  notes: string
 
-    setShipping:(method)=>set({shippingMethod:method}),
+  currentStep: number
 
-    setPayment:(method)=>set({paymentMethod:method}),
+  setCurrentStep(step:number):void
 
-    setNotes:(notes)=>set({notes}),
+  setAddress(address:CheckoutAddress):void
 
-    reset:()=>set({
+  setShipping(
 
-        addressId:null,
+    method:ShippingMethod,
 
-        shippingMethod:null,
+    price:number
 
-        paymentMethod:"zarinpal",
+  ):void
 
-        notes:""
+  setPayment(method:string):void
+
+  setNotes(notes:string):void
+
+  reset():void
+
+}
+
+export const useCheckoutStore = create<CheckoutStore>((set)=>({
+
+  selectedAddress:null,
+
+  shippingMethod:null,
+
+  shippingPrice:0,
+
+  paymentMethod:null,
+
+  notes:"",
+
+  currentStep:1,
+
+  setCurrentStep(step){
+
+    set({
+
+      currentStep:step
 
     })
+
+  },
+
+  setAddress(address){
+
+    set({
+
+      selectedAddress:address
+
+    })
+
+  },
+
+  setShipping(method,price){
+
+    set({
+
+      shippingMethod:method,
+
+      shippingPrice:price
+
+    })
+
+  },
+
+  setPayment(method){
+
+    set({
+
+      paymentMethod:method
+
+    })
+
+  },
+
+  setNotes(notes){
+
+    set({
+
+      notes
+
+    })
+
+  },
+
+  reset(){
+
+    set({
+
+      selectedAddress:null,
+
+      shippingMethod:null,
+
+      shippingPrice:0,
+
+      paymentMethod:null,
+
+      notes:"",
+
+      currentStep:1
+
+    })
+
+  }
 
 }))
