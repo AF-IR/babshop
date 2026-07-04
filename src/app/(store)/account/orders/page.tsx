@@ -17,13 +17,10 @@ export default function OrdersPage() {
   useEffect(() => {
     async function load() {
       if (!user) return
-
       const data = await getOrders(user.id)
-
       setOrders(data)
       setLoading(false)
     }
-
     if (isReady) load()
   }, [isReady, user])
 
@@ -49,14 +46,10 @@ export default function OrdersPage() {
           {orders.map((order) => (
             <Card key={order.id}>
               <CardContent className="pt-6">
-                <p className="font-semibold">
-                  {order.order_number}
-                </p>
-
+                <p className="font-semibold">{order.order_number}</p>
                 <p className="text-sm text-muted-foreground">
                   Status: {order.status}
                 </p>
-
                 <p className="text-sm">
                   Total: {order.total.toLocaleString()}
                 </p>
