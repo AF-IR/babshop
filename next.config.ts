@@ -11,9 +11,12 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "s33.picofile.com",
       },
+      {
+        protocol: "https",
+        hostname: "placehold.co",
+      },
     ],
   },
-
   // Redirects are defined in src/lib/redirects.ts
   async redirects() {
     return redirectRules;
