@@ -93,7 +93,7 @@ export async function createOrder(
       address_id: address.id,
       status: "pending",
       payment_status: "pending",
-      shipping_method: shipping.code,
+      shipping_method: shipping.id,
       shipping_title: shipping.title,
       shipping_price: shippingPrice,
       subtotal,
