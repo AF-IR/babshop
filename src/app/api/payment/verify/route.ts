@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 
-import { createClient } from "@/lib/supabase/server"
+// ✅ تغییر import به فایل موجود
+import { supabase } from "@/lib/supabase"
 
 import { verifyPayment } from "@/lib/payment/zarinpal"
 
@@ -15,7 +16,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const supabase = createClient()
+    // ❌ حذف: const supabase = createClient()
 
     //--------------------------------------------------
     // پیدا کردن پرداخت
