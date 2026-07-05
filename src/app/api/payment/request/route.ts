@@ -5,10 +5,13 @@ import { requestPayment } from "@/lib/payment/zarinpal"
 export async function POST(req: NextRequest) {
   try {
     //--------------------------------------------------
-    // دریافت سفارش
+    // دریافت orderId از درخواست
     //--------------------------------------------------
 
     const { orderId } = await req.json()
+
+    // ✅ لاگ ۱: بررسی مقدار orderId دریافتی
+    console.log("📦 orderId received:", orderId)
 
     if (!orderId) {
       return NextResponse.json(
@@ -18,7 +21,7 @@ export async function POST(req: NextRequest) {
     }
 
     //--------------------------------------------------
-    // پیدا کردن سفارش (بدون چک user_id)
+    // پیدا کردن سفارش
     //--------------------------------------------------
 
     const { data: order, error } = await supabase
@@ -26,6 +29,10 @@ export async function POST(req: NextRequest) {
       .select("*")
       .eq("id", orderId)
       .single()
+
+    // ✅ لاگ ۲: نتیجه جستجوی سفارش
+    console.log("🔍 Order found:", order)
+    console.log("❌ Error (if any):", error)
 
     if (error || !order) {
       return NextResponse.json(
@@ -50,9 +57,10 @@ export async function POST(req: NextRequest) {
     //--------------------------------------------------
 
     const amount = Math.round(order.total / 10)
+    console.log("💰 Amount in Toman:", amount)
 
     //--------------------------------------------------
-    // درخواست زرین پال
+    // درخواست به زرین‌پال
     //--------------------------------------------------
 
     const payment = await requestPayment({
@@ -61,8 +69,10 @@ export async function POST(req: NextRequest) {
       callbackUrl: `${process.env.NEXT_PUBLIC_APP_URL}/payment/zarinpal/callback`,
     })
 
+    console.log("✅ Payment request successful, authority:", payment.authority)
+
     //--------------------------------------------------
-    // ذخیره Authority
+    // ذخیره Authority در جدول payments
     //--------------------------------------------------
 
     const { error: paymentError } = await supabase
@@ -73,16 +83,20 @@ export async function POST(req: NextRequest) {
       .eq("order_id", order.id)
 
     if (paymentError) {
-      console.error("Error updating payment authority:", paymentError)
+      console.error("❌ Error updating payment authority:", paymentError)
+    } else {
+      console.log("✅ Authority saved successfully for order:", order.id)
     }
 
+    //--------------------------------------------------
+    // برگرداندن redirectUrl به کلاینت
     //--------------------------------------------------
 
     return NextResponse.json({
       redirectUrl: payment.url,
     })
   } catch (e) {
-    console.error(e)
+    console.error("💥 Internal Server Error:", e)
 
     return NextResponse.json(
       { error: "Internal Server Error" },
