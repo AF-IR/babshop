@@ -8,21 +8,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 import { loadCheckoutCart } from "@/lib/checkout/cart"
 import { getAddresses } from "@/lib/addresses"
-// import { getShippingMethods } from "@/lib/shipping"   // بعداً اضافه می‌شود
+import { getShippingMethods, type ShippingMethod } from "@/lib/shipping" // ← جدید
 
 import { useUser } from "@/hooks/use-user"
 
 import type { CheckoutCart } from "@/lib/checkout/cart"
 import type { Address } from "@/types"
-
-// نوع موقت برای روش ارسال (بعداً از دیتابیس خوانده می‌شود)
-type ShippingMethod = {
-  id: string
-  name: string
-  description: string
-  delivery_time: string
-  price: number
-}
 
 export default function CheckoutPage() {
   const router = useRouter()
@@ -31,24 +22,7 @@ export default function CheckoutPage() {
   const [loading, setLoading] = useState(true)
   const [cart, setCart] = useState<CheckoutCart | null>(null)
   const [addresses, setAddresses] = useState<Address[]>([])
-
-  // داده‌های آزمایشی روش ارسال (تا زمان اتصال به دیتابیس)
-  const [shippingMethods] = useState<ShippingMethod[]>([
-    {
-      id: "post",
-      name: "پست پیشتاز",
-      description: "ارسال با پست",
-      delivery_time: "۲ تا ۴ روز کاری",
-      price: 59000,
-    },
-    {
-      id: "tipax",
-      name: "تیپاکس",
-      description: "ارسال با تیپاکس",
-      delivery_time: "۱ تا ۲ روز کاری",
-      price: 89000,
-    },
-  ])
+  const [shippingMethods, setShippingMethods] = useState<ShippingMethod[]>([]) // ← جدید
 
   // انتخاب‌های کاربر
   const [selectedAddressId, setSelectedAddressId] = useState("")
@@ -72,20 +46,24 @@ export default function CheckoutPage() {
 
     async function loadData() {
       try {
-        const [cartData, addressData] = await Promise.all([
+        const [cartData, addressData, shippingData] = await Promise.all([
           loadCheckoutCart(),
           getAddresses(),
-          // getShippingMethods(), // بعداً اضافه می‌شود
+          getShippingMethods(), // ← خواندن از دیتابیس
         ])
 
         setCart(cartData)
         setAddresses(addressData)
+        setShippingMethods(shippingData) // ← ذخیره در state
 
+        // انتخاب پیش‌فرض آدرس
         const defaultAddress = addressData.find((a) => a.isDefault) ?? addressData[0]
         if (defaultAddress) setSelectedAddressId(defaultAddress.id)
 
-        // انتخاب پیش‌فرض اولین روش ارسال
-        if (shippingMethods.length > 0) setSelectedShippingId(shippingMethods[0].id)
+        // انتخاب پیش‌فرض روش ارسال (اولین مورد فعال)
+        if (shippingData.length > 0) {
+          setSelectedShippingId(shippingData[0].id)
+        }
       } catch (error) {
         console.error("خطا در بارگذاری اطلاعات:", error)
       } finally {
@@ -94,7 +72,7 @@ export default function CheckoutPage() {
     }
 
     loadData()
-  }, [userLoading, isAuthenticated, router, shippingMethods])
+  }, [userLoading, isAuthenticated, router])
 
   if (userLoading || loading) {
     return <div className="container py-10 text-center">در حال بارگذاری اطلاعات...</div>
@@ -111,17 +89,22 @@ export default function CheckoutPage() {
     )
   }
 
-  // تابع پرداخت (موقت)
+  // تابع پرداخت (موقت – فقط لاگ می‌گیرد)
   const handlePayment = () => {
-    alert(`پرداخت با روش ${paymentMethod} به مبلغ ${total.toLocaleString()} ریال`)
+    console.log({
+      address: selectedAddressId,
+      shipping: selectedShippingId,
+      payment: paymentMethod,
+    })
     // در آینده: ثبت سفارش و اتصال به درگاه
+    alert(`پرداخت با روش ${paymentMethod} به مبلغ ${total.toLocaleString()} ریال`)
   }
 
   return (
     <div className="container mx-auto max-w-6xl py-10">
       <h1 className="text-3xl font-bold mb-8">تسویه حساب</h1>
 
-      {/* استپر ساده (جایگزین کامپوننت حذف‌شده) */}
+      {/* استپر ساده */}
       <div className="flex items-center justify-center gap-4 mb-8">
         {[1, 2, 3].map((s) => (
           <div key={s} className="flex items-center">
@@ -208,34 +191,38 @@ export default function CheckoutPage() {
               <CardTitle>روش ارسال</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {shippingMethods.map((method) => (
-                <label
-                  key={method.id}
-                  className={`flex items-center justify-between border rounded-lg p-4 cursor-pointer transition ${
-                    selectedShippingId === method.id
-                      ? "border-primary bg-primary/5"
-                      : "hover:bg-muted/50"
-                  }`}
-                >
-                  <div>
-                    <p className="font-medium">{method.name}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {method.description} - {method.delivery_time}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <span className="font-semibold">
-                      {method.price.toLocaleString()} ریال
-                    </span>
-                    <input
-                      type="radio"
-                      name="shipping"
-                      checked={selectedShippingId === method.id}
-                      onChange={() => setSelectedShippingId(method.id)}
-                    />
-                  </div>
-                </label>
-              ))}
+              {shippingMethods.length === 0 ? (
+                <p className="text-muted-foreground">هیچ روش ارسالی فعال نیست.</p>
+              ) : (
+                shippingMethods.map((method) => (
+                  <label
+                    key={method.id}
+                    className={`flex items-center justify-between border rounded-lg p-4 cursor-pointer transition ${
+                      selectedShippingId === method.id
+                        ? "border-primary bg-primary/5"
+                        : "hover:bg-muted/50"
+                    }`}
+                  >
+                    <div>
+                      <p className="font-medium">{method.title}</p> {/* ← name → title */}
+                      <p className="text-sm text-muted-foreground">
+                        {method.description ?? "ارسال استاندارد"} {/* ← delivery_time حذف شد */}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <span className="font-semibold">
+                        {method.price.toLocaleString()} ریال
+                      </span>
+                      <input
+                        type="radio"
+                        name="shipping"
+                        checked={selectedShippingId === method.id}
+                        onChange={() => setSelectedShippingId(method.id)}
+                      />
+                    </div>
+                  </label>
+                ))
+              )}
               {step === 2 && (
                 <Button
                   className="w-full mt-4"
