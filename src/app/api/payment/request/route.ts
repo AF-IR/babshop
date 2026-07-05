@@ -10,7 +10,6 @@ export async function POST(req: NextRequest) {
 
     const { orderId } = await req.json()
 
-    // ✅ لاگ ۱: بررسی مقدار orderId دریافتی
     console.log("📦 orderId received:", orderId)
 
     if (!orderId) {
@@ -30,13 +29,32 @@ export async function POST(req: NextRequest) {
       .eq("id", orderId)
       .single()
 
-    // ✅ لاگ ۲: نتیجه جستجوی سفارش
     console.log("🔍 Order found:", order)
-    console.log("❌ Error (if any):", error)
+    console.log("❌ Supabase error:", error)
+
+    // --------------------------------------------------
+    // ✅ تغییر مهم: برگرداندن خطای کامل Supabase برای دیباگ
+    // --------------------------------------------------
 
     if (error || !order) {
+      console.error("Supabase error details:", {
+        message: error?.message,
+        code: error?.code,
+        details: error?.details,
+        hint: error?.hint,
+      })
+
       return NextResponse.json(
-        { error: "Order not found" },
+        {
+          error: "Order not found",
+          supabaseError: {
+            message: error?.message || null,
+            code: error?.code || null,
+            details: error?.details || null,
+            hint: error?.hint || null,
+          },
+          orderId,
+        },
         { status: 404 }
       )
     }
@@ -99,7 +117,10 @@ export async function POST(req: NextRequest) {
     console.error("💥 Internal Server Error:", e)
 
     return NextResponse.json(
-      { error: "Internal Server Error" },
+      {
+        error: "Internal Server Error",
+        details: e instanceof Error ? e.message : String(e),
+      },
       { status: 500 }
     )
   }
