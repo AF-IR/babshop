@@ -1,58 +1,26 @@
 import { supabase } from "@/lib/supabase"
 
-export interface ShippingMethod {
-
+export type ShippingMethod = {
   id: string
-
   title: string
-
-  type: "fixed" | "cod" | "free"
-
+  code: string
+  description: string | null
+  min_boxes: number
+  max_boxes: number
   price: number
-
-  estimatedDays: string
-
+  cod: boolean
+  active: boolean
+  sort_order: number
 }
 
-export async function getShippingMethods(
-  boxCount: number
-): Promise<ShippingMethod[]> {
-
+export async function getShippingMethods() {
   const { data, error } = await supabase
-
-    .from("shipping_rules")
-
+    .from("shipping_methods")
     .select("*")
-
     .eq("active", true)
+    .order("sort_order")
 
-    .order("price")
+  if (error) throw error
 
-  if (error)
-    throw error
-
-  const methods = (data ?? []).filter(rule => {
-
-    if (rule.max_boxes == null)
-      return true
-
-    return boxCount <= rule.max_boxes
-
-  })
-
-  return methods.map(rule => ({
-
-    id: rule.id,
-
-    title: rule.title,
-
-    type: rule.type,
-
-    price: rule.price,
-
-    estimatedDays:
-      rule.estimated_days ?? "",
-
-  }))
-
+  return data as ShippingMethod[]
 }
