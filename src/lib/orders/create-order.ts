@@ -36,19 +36,12 @@ export async function createOrder(
     throw new Error("روش ارسال پیدا نشد.")
   }
 
-  // سبد خرید
+  // ----------------------------------------------
+  // مرحله ۱: دریافت آیتم‌های سبد خرید (بدون JOIN)
+  // ----------------------------------------------
   const { data: cartItems, error: cartError } = await supabase
     .from("cart_items")
-    .select(`
-      quantity,
-      products (
-        id,
-        title,
-        slug,
-        price,
-        image
-      )
-    `)
+    .select("*") // ✅ فقط خود cart_items
     .eq("user_id", user.id)
 
   if (cartError) throw cartError
@@ -57,74 +50,62 @@ export async function createOrder(
     throw new Error("سبد خرید خالی است.")
   }
 
-  //---------------------------------------
-  // محاسبه مبلغ
-  //---------------------------------------
+  // ----------------------------------------------
+  // مرحله ۲: دریافت اطلاعات محصولات به صورت مجزا
+  // ----------------------------------------------
+  const productIds = cartItems.map((i) => i.product_id)
 
+  const { data: products, error: productsError } = await supabase
+    .from("products") // ⚠️ اگر خطا داد، به "products_v2" تغییر بده
+    .select("*")
+    .in("id", productIds)
+
+  if (productsError) throw productsError
+
+  // ----------------------------------------------
+  // محاسبه مبلغ (مرحله ۳)
+  // ----------------------------------------------
   let subtotal = 0
 
   for (const item of cartItems) {
-    const product = item.products as any
+    const product = products!.find(
+      (p) => p.id === item.product_id
+    )
+
+    if (!product) continue
 
     subtotal += product.price * item.quantity
   }
 
   const shippingPrice = shipping.price
-
   const total = subtotal + shippingPrice
 
-  //---------------------------------------
   // شماره سفارش
-  //---------------------------------------
+  const orderNumber = "ORD-" + Date.now().toString()
 
-  const orderNumber =
-    "ORD-" +
-    Date.now().toString()
-
-  //---------------------------------------
+  // ----------------------------------------------
   // ساخت سفارش
-  //---------------------------------------
-
+  // ----------------------------------------------
   const { data: order, error: orderError } = await supabase
     .from("orders")
     .insert({
       order_number: orderNumber,
-
       user_id: user.id,
-
       address_id: address.id,
-
       status: "pending",
-
       payment_status: "pending",
-
       shipping_method: shipping.code,
-
       shipping_title: shipping.title,
-
       shipping_price: shippingPrice,
-
       subtotal,
-
       discount: 0,
-
       total,
-
-      receiver_name:
-        address.first_name +
-        " " +
-        address.last_name,
-
+      receiver_name: address.first_name + " " + address.last_name,
       receiver_phone: address.phone,
-
       address_text: address.line1,
-
       city: address.city,
-
       province: address.state,
-
       postal_code: address.postal_code,
-
       payment_method: "zarinpal",
     })
     .select()
@@ -132,28 +113,22 @@ export async function createOrder(
 
   if (orderError) throw orderError
 
-  //---------------------------------------
-  // آیتم‌های سفارش
-  //---------------------------------------
-
+  // ----------------------------------------------
+  // مرحله ۴: آیتم‌های سفارش (با اطلاعات محصولات واکشی‌شده)
+  // ----------------------------------------------
   const orderItems = cartItems.map((item) => {
-    const product = item.products as any
+    const product = products!.find(
+      (p) => p.id === item.product_id
+    )! // مطمئنیم که وجود دارد
 
     return {
       order_id: order.id,
-
       product_id: product.id,
-
       quantity: item.quantity,
-
       unit_price: product.price,
-
       total_price: product.price * item.quantity,
-
       product_title: product.title,
-
       product_slug: product.slug,
-
       product_image: product.image,
     }
   })
@@ -164,27 +139,20 @@ export async function createOrder(
 
   if (orderItemsError) throw orderItemsError
 
-  //---------------------------------------
+  // ----------------------------------------------
   // ساخت رکورد پرداخت
-  //---------------------------------------
-
+  // ----------------------------------------------
   const { error: paymentError } = await supabase
     .from("payments")
     .insert({
       user_id: user.id,
-
       order_id: order.id,
-
       gateway: "zarinpal",
-
       amount: total,
-
       status: "pending",
     })
 
   if (paymentError) throw paymentError
-
-  //---------------------------------------
 
   return order
 }
