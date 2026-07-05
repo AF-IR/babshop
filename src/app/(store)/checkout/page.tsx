@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { loadCheckoutCart } from "@/lib/checkout/cart"
 import { getAddresses } from "@/lib/addresses"
 import { getShippingMethods, type ShippingMethod } from "@/lib/shipping"
-import { createOrder } from "@/lib/orders/create-order" // ✅ مرحله ۲ - ایمپورت جدید
+import { createOrder } from "@/lib/orders/create-order"
 
 import { useUser } from "@/hooks/use-user"
 
@@ -21,7 +21,7 @@ export default function CheckoutPage() {
   const { loading: userLoading, isAuthenticated } = useUser()
 
   const [loading, setLoading] = useState(true)
-  const [creatingOrder, setCreatingOrder] = useState(false) // ✅ مرحله ۲ - state جدید
+  const [creatingOrder, setCreatingOrder] = useState(false)
   const [cart, setCart] = useState<CheckoutCart | null>(null)
   const [addresses, setAddresses] = useState<Address[]>([])
   const [shippingMethods, setShippingMethods] = useState<ShippingMethod[]>([])
@@ -70,7 +70,7 @@ export default function CheckoutPage() {
     loadData()
   }, [userLoading, isAuthenticated, router])
 
-  // ✅ مرحله ۲ - تابع handlePayment جدید (async)
+  // ✅ تابع handlePayment اصلاح‌شده با درخواست به API پرداخت
   const handlePayment = async () => {
     if (!selectedAddressId) {
       alert("لطفا آدرس را انتخاب کنید.")
@@ -85,20 +85,40 @@ export default function CheckoutPage() {
     try {
       setCreatingOrder(true)
 
+      // ۱. ثبت سفارش در دیتابیس
       const order = await createOrder(
         selectedAddressId,
         selectedShippingId
       )
 
-      console.log(order)
+      console.log("سفارش ثبت شد:", order)
 
-      alert("سفارش ثبت شد.")
+      // ۲. درخواست به API پرداخت برای دریافت لینک زرین‌پال
+      const response = await fetch("/api/payment/request", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          orderId: order.id,
+        }),
+      })
 
-      // مرحله بعد: اتصال به زرین پال
+      const data = await response.json()
 
+      if (!response.ok) {
+        throw new Error(data.error || "خطا در ایجاد پرداخت")
+      }
+
+      // ۳. هدایت کاربر به درگاه زرین‌پال
+      if (data.redirectUrl) {
+        window.location.href = data.redirectUrl
+      } else {
+        throw new Error("آدرس پرداخت دریافت نشد.")
+      }
     } catch (err) {
       console.error(err)
-      alert("ثبت سفارش با خطا مواجه شد.")
+      alert(err instanceof Error ? err.message : "ثبت سفارش با خطا مواجه شد.")
     } finally {
       setCreatingOrder(false)
     }
@@ -298,7 +318,6 @@ export default function CheckoutPage() {
                 </label>
               </div>
               {step === 3 && (
-                // ✅ مرحله ۲ - دکمه پرداخت با disabled و متن شرطی
                 <Button
                   className="w-full mt-6"
                   disabled={creatingOrder}
