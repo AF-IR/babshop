@@ -1,29 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
-
-// ✅ تغییر import به فایل موجود
 import { supabase } from "@/lib/supabase"
-
 import { requestPayment } from "@/lib/payment/zarinpal"
 
 export async function POST(req: NextRequest) {
   try {
-    // ❌ حذف: const supabase = createClient()
-
-    //--------------------------------------------------
-    // احراز هویت
-    //--------------------------------------------------
-
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-
-    if (!user) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
-
     //--------------------------------------------------
     // دریافت سفارش
     //--------------------------------------------------
@@ -38,14 +18,13 @@ export async function POST(req: NextRequest) {
     }
 
     //--------------------------------------------------
-    // پیدا کردن سفارش
+    // پیدا کردن سفارش (بدون چک user_id)
     //--------------------------------------------------
 
     const { data: order, error } = await supabase
       .from("orders")
       .select("*")
       .eq("id", orderId)
-      .eq("user_id", user.id)
       .single()
 
     if (error || !order) {
@@ -79,8 +58,7 @@ export async function POST(req: NextRequest) {
     const payment = await requestPayment({
       amount,
       description: `سفارش ${order.order_number}`,
-      callbackUrl:
-        `${process.env.NEXT_PUBLIC_APP_URL}/payment/zarinpal/callback`,
+      callbackUrl: `${process.env.NEXT_PUBLIC_APP_URL}/payment/zarinpal/callback`,
     })
 
     //--------------------------------------------------
@@ -95,7 +73,7 @@ export async function POST(req: NextRequest) {
       .eq("order_id", order.id)
 
     if (paymentError) {
-      console.error(paymentError)
+      console.error("Error updating payment authority:", paymentError)
     }
 
     //--------------------------------------------------
