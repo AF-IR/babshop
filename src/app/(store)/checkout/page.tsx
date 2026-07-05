@@ -1,3 +1,5 @@
+src/app/(store)/checkout/page.tsx
+
 "use client"
 
 import { useEffect, useState } from "react"
@@ -26,6 +28,11 @@ export default function CheckoutPage() {
   const [addresses, setAddresses] = useState<Address[]>([])
 
   const [selectedAddress, setSelectedAddress] = useState("")
+
+  // مراحل ویزارد
+  const [step, setStep] = useState(1)
+  const [shippingMethod, setShippingMethod] = useState("")
+  const [paymentMethod, setPaymentMethod] = useState("zarinpal")
 
   useEffect(() => {
     if (userLoading) return
@@ -85,8 +92,10 @@ export default function CheckoutPage() {
 
       <div className="grid lg:grid-cols-3 gap-8">
 
+        {/* ستون چپ */}
         <div className="lg:col-span-2">
 
+          {/* مرحله ۱: انتخاب آدرس */}
           <Card>
 
             <CardHeader>
@@ -156,8 +165,143 @@ export default function CheckoutPage() {
 
           </Card>
 
+          {/* مرحله ۲: انتخاب روش ارسال */}
+          {step >= 2 && (
+
+            <Card className="mt-6">
+
+              <CardHeader>
+
+                <CardTitle>
+
+                  انتخاب روش ارسال
+
+                </CardTitle>
+
+              </CardHeader>
+
+              <CardContent className="space-y-3">
+
+                <label className="flex items-center justify-between border rounded-lg p-4 cursor-pointer">
+
+                  <div>
+
+                    <p className="font-medium">
+
+                      پست پیشتاز
+
+                    </p>
+
+                    <p className="text-sm text-muted-foreground">
+
+                      ۲ تا ۴ روز کاری
+
+                    </p>
+
+                  </div>
+
+                  <input
+                    type="radio"
+                    checked={shippingMethod === "post"}
+                    onChange={() => setShippingMethod("post")}
+                  />
+
+                </label>
+
+                <label className="flex items-center justify-between border rounded-lg p-4 cursor-pointer">
+
+                  <div>
+
+                    <p className="font-medium">
+
+                      تیپاکس
+
+                    </p>
+
+                    <p className="text-sm text-muted-foreground">
+
+                      ۱ تا ۲ روز کاری
+
+                    </p>
+
+                  </div>
+
+                  <input
+                    type="radio"
+                    checked={shippingMethod === "tipax"}
+                    onChange={() => setShippingMethod("tipax")}
+                  />
+
+                </label>
+
+                <Button
+                  className="w-full mt-4"
+                  disabled={!shippingMethod}
+                  onClick={() => setStep(3)}
+                >
+
+                  ادامه
+
+                </Button>
+
+              </CardContent>
+
+            </Card>
+
+          )}
+
+          {/* مرحله ۳: روش پرداخت */}
+          {step >= 3 && (
+
+            <Card className="mt-6">
+
+              <CardHeader>
+
+                <CardTitle>
+
+                  روش پرداخت
+
+                </CardTitle>
+
+              </CardHeader>
+
+              <CardContent>
+
+                <label className="flex items-center justify-between border rounded-lg p-4">
+
+                  <div>
+
+                    <p className="font-medium">
+
+                      پرداخت اینترنتی زرین پال
+
+                    </p>
+
+                    <p className="text-sm text-muted-foreground">
+
+                      پرداخت امن
+
+                    </p>
+
+                  </div>
+
+                  <input
+                    type="radio"
+                    checked={paymentMethod === "zarinpal"}
+                    onChange={() => setPaymentMethod("zarinpal")}
+                  />
+
+                </label>
+
+              </CardContent>
+
+            </Card>
+
+          )}
+
         </div>
 
+        {/* ستون راست: خلاصه سفارش */}
         <div>
 
           <Card>
@@ -190,9 +334,7 @@ export default function CheckoutPage() {
               <Button
                 className="w-full mt-6"
                 disabled={!selectedAddress}
-                onClick={() => {
-                  // مرحله بعد
-                }}
+                onClick={() => setStep(2)}
               >
                 ادامه
               </Button>
