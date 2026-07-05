@@ -8,7 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 import { loadCheckoutCart } from "@/lib/checkout/cart"
 import { getAddresses } from "@/lib/addresses"
-import { getShippingMethods, type ShippingMethod } from "@/lib/shipping" // ← جدید
+// ✅ مسیر درست: همان فایل shipping.ts که قبلاً ساختی
+import { getShippingMethods, type ShippingMethod } from "@/lib/shipping"
 
 import { useUser } from "@/hooks/use-user"
 
@@ -22,17 +23,15 @@ export default function CheckoutPage() {
   const [loading, setLoading] = useState(true)
   const [cart, setCart] = useState<CheckoutCart | null>(null)
   const [addresses, setAddresses] = useState<Address[]>([])
-  const [shippingMethods, setShippingMethods] = useState<ShippingMethod[]>([]) // ← جدید
+  
+  // ✅ درست: state خالی با setter تعریف شده
+  const [shippingMethods, setShippingMethods] = useState<ShippingMethod[]>([])
 
-  // انتخاب‌های کاربر
   const [selectedAddressId, setSelectedAddressId] = useState("")
   const [selectedShippingId, setSelectedShippingId] = useState("")
   const [paymentMethod, setPaymentMethod] = useState<"zarinpal" | "wallet">("zarinpal")
-
-  // مرحله ویزارد (۱ تا ۳)
   const [step, setStep] = useState(1)
 
-  // محاسبه هزینه ارسال
   const selectedShipping = shippingMethods.find((m) => m.id === selectedShippingId)
   const shippingCost = selectedShipping?.price || 0
   const total = cart ? cart.subtotal + shippingCost : 0
@@ -49,18 +48,16 @@ export default function CheckoutPage() {
         const [cartData, addressData, shippingData] = await Promise.all([
           loadCheckoutCart(),
           getAddresses(),
-          getShippingMethods(), // ← خواندن از دیتابیس
+          getShippingMethods(), // ✅ فراخوانی از دیتابیس
         ])
 
         setCart(cartData)
         setAddresses(addressData)
-        setShippingMethods(shippingData) // ← ذخیره در state
+        setShippingMethods(shippingData) // ✅ ذخیره در state
 
-        // انتخاب پیش‌فرض آدرس
         const defaultAddress = addressData.find((a) => a.isDefault) ?? addressData[0]
         if (defaultAddress) setSelectedAddressId(defaultAddress.id)
 
-        // انتخاب پیش‌فرض روش ارسال (اولین مورد فعال)
         if (shippingData.length > 0) {
           setSelectedShippingId(shippingData[0].id)
         }
@@ -89,14 +86,12 @@ export default function CheckoutPage() {
     )
   }
 
-  // تابع پرداخت (موقت – فقط لاگ می‌گیرد)
   const handlePayment = () => {
     console.log({
       address: selectedAddressId,
       shipping: selectedShippingId,
       payment: paymentMethod,
     })
-    // در آینده: ثبت سفارش و اتصال به درگاه
     alert(`پرداخت با روش ${paymentMethod} به مبلغ ${total.toLocaleString()} ریال`)
   }
 
@@ -104,7 +99,6 @@ export default function CheckoutPage() {
     <div className="container mx-auto max-w-6xl py-10">
       <h1 className="text-3xl font-bold mb-8">تسویه حساب</h1>
 
-      {/* استپر ساده */}
       <div className="flex items-center justify-center gap-4 mb-8">
         {[1, 2, 3].map((s) => (
           <div key={s} className="flex items-center">
@@ -129,7 +123,6 @@ export default function CheckoutPage() {
       </div>
 
       <div className="grid lg:grid-cols-3 gap-8">
-        {/* ستون اصلی */}
         <div className="lg:col-span-2 space-y-6">
           {/* مرحله ۱: آدرس */}
           <Card className={step !== 1 ? "opacity-60" : ""}>
@@ -204,9 +197,11 @@ export default function CheckoutPage() {
                     }`}
                   >
                     <div>
-                      <p className="font-medium">{method.title}</p> {/* ← name → title */}
+                      {/* ✅ اصلاح: title به جای name */}
+                      <p className="font-medium">{method.title}</p>
+                      {/* ✅ اصلاح: فقط description که در دیتابیس داری */}
                       <p className="text-sm text-muted-foreground">
-                        {method.description ?? "ارسال استاندارد"} {/* ← delivery_time حذف شد */}
+                        {method.description ?? "ارسال استاندارد"}
                       </p>
                     </div>
                     <div className="flex items-center gap-4">
