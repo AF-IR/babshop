@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server"
 
-import { createClient } from "@/lib/supabase/server"
+// ✅ تغییر import به فایل موجود
+import { supabase } from "@/lib/supabase"
 
 import { requestPayment } from "@/lib/payment/zarinpal"
 
 export async function POST(req: NextRequest) {
   try {
-    const supabase = createClient()
+    // ❌ حذف: const supabase = createClient()
 
     //--------------------------------------------------
     // احراز هویت
