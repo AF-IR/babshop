@@ -8,8 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 import { loadCheckoutCart } from "@/lib/checkout/cart"
 import { getAddresses } from "@/lib/addresses"
-// ✅ مسیر درست: همان فایل shipping.ts که قبلاً ساختی
 import { getShippingMethods, type ShippingMethod } from "@/lib/shipping"
+import { createOrder } from "@/lib/orders/create-order" // ✅ مرحله ۲ - ایمپورت جدید
 
 import { useUser } from "@/hooks/use-user"
 
@@ -21,10 +21,9 @@ export default function CheckoutPage() {
   const { loading: userLoading, isAuthenticated } = useUser()
 
   const [loading, setLoading] = useState(true)
+  const [creatingOrder, setCreatingOrder] = useState(false) // ✅ مرحله ۲ - state جدید
   const [cart, setCart] = useState<CheckoutCart | null>(null)
   const [addresses, setAddresses] = useState<Address[]>([])
-  
-  // ✅ درست: state خالی با setter تعریف شده
   const [shippingMethods, setShippingMethods] = useState<ShippingMethod[]>([])
 
   const [selectedAddressId, setSelectedAddressId] = useState("")
@@ -48,12 +47,12 @@ export default function CheckoutPage() {
         const [cartData, addressData, shippingData] = await Promise.all([
           loadCheckoutCart(),
           getAddresses(),
-          getShippingMethods(), // ✅ فراخوانی از دیتابیس
+          getShippingMethods(),
         ])
 
         setCart(cartData)
         setAddresses(addressData)
-        setShippingMethods(shippingData) // ✅ ذخیره در state
+        setShippingMethods(shippingData)
 
         const defaultAddress = addressData.find((a) => a.isDefault) ?? addressData[0]
         if (defaultAddress) setSelectedAddressId(defaultAddress.id)
@@ -71,6 +70,40 @@ export default function CheckoutPage() {
     loadData()
   }, [userLoading, isAuthenticated, router])
 
+  // ✅ مرحله ۲ - تابع handlePayment جدید (async)
+  const handlePayment = async () => {
+    if (!selectedAddressId) {
+      alert("لطفا آدرس را انتخاب کنید.")
+      return
+    }
+
+    if (!selectedShippingId) {
+      alert("لطفا روش ارسال را انتخاب کنید.")
+      return
+    }
+
+    try {
+      setCreatingOrder(true)
+
+      const order = await createOrder(
+        selectedAddressId,
+        selectedShippingId
+      )
+
+      console.log(order)
+
+      alert("سفارش ثبت شد.")
+
+      // مرحله بعد: اتصال به زرین پال
+
+    } catch (err) {
+      console.error(err)
+      alert("ثبت سفارش با خطا مواجه شد.")
+    } finally {
+      setCreatingOrder(false)
+    }
+  }
+
   if (userLoading || loading) {
     return <div className="container py-10 text-center">در حال بارگذاری اطلاعات...</div>
   }
@@ -84,15 +117,6 @@ export default function CheckoutPage() {
         </Button>
       </div>
     )
-  }
-
-  const handlePayment = () => {
-    console.log({
-      address: selectedAddressId,
-      shipping: selectedShippingId,
-      payment: paymentMethod,
-    })
-    alert(`پرداخت با روش ${paymentMethod} به مبلغ ${total.toLocaleString()} ریال`)
   }
 
   return (
@@ -197,9 +221,7 @@ export default function CheckoutPage() {
                     }`}
                   >
                     <div>
-                      {/* ✅ اصلاح: title به جای name */}
                       <p className="font-medium">{method.title}</p>
-                      {/* ✅ اصلاح: فقط description که در دیتابیس داری */}
                       <p className="text-sm text-muted-foreground">
                         {method.description ?? "ارسال استاندارد"}
                       </p>
@@ -276,8 +298,13 @@ export default function CheckoutPage() {
                 </label>
               </div>
               {step === 3 && (
-                <Button className="w-full mt-6" onClick={handlePayment}>
-                  پرداخت نهایی
+                // ✅ مرحله ۲ - دکمه پرداخت با disabled و متن شرطی
+                <Button
+                  className="w-full mt-6"
+                  disabled={creatingOrder}
+                  onClick={handlePayment}
+                >
+                  {creatingOrder ? "در حال ثبت سفارش..." : "پرداخت نهایی"}
                 </Button>
               )}
             </CardContent>
