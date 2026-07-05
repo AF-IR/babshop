@@ -52,13 +52,13 @@ export async function createOrder(
   const productIds = cartItems.map((i) => i.product_id)
 
   const { data: products, error: productsError } = await supabase
-    .from("products") // همان products که گفتی
+    .from("products") // اگر products_v2 داری، این را تغییر بده
     .select("*")
     .in("id", productIds)
 
   if (productsError) throw productsError
 
-  // ۶. چک موجودی (نکته شماره ۷ شما)
+  // ۶. چک موجودی
   for (const item of cartItems) {
     const product = products?.find((p) => p.id === item.product_id)
     if (!product) {
@@ -81,7 +81,7 @@ export async function createOrder(
   const shippingPrice = shipping.price
   const total = subtotal + shippingPrice
 
-  // ۸. شماره سفارش (فعلاً همان ORD-... ولی بعداً اصلاح می‌کنیم)
+  // ۸. شماره سفارش (فعلاً موقت)
   const orderNumber = "ORD-" + Date.now().toString()
 
   // ۹. ساخت سفارش
@@ -112,27 +112,35 @@ export async function createOrder(
 
   if (orderError) throw orderError
 
-  // ۱۰. ساخت آیتم‌های سفارش (با مدیریت null و حذف !)
-  const orderItems = cartItems
-    .map((item) => {
-      const product = products?.find((p) => p.id === item.product_id)
-      if (!product) return null // اگر محصول وجود نداشت، رد می‌شود
+  // ۱۰. ساخت آیتم‌های سفارش (با حلقه for و بدون null)
+  const orderItems: {
+    order_id: string
+    product_id: string
+    quantity: number
+    unit_price: number
+    total_price: number
+    product_title: string
+    product_slug: string
+    product_image: string | null
+  }[] = []
 
-      return {
-        order_id: order.id,
-        product_id: product.id,
-        quantity: item.quantity,
-        unit_price: product.price,
-        total_price: product.price * item.quantity,
-        product_title: product.title,
-        product_slug: product.slug,
-        product_image: product.image,
-      }
+  for (const item of cartItems) {
+    const product = products?.find((p) => p.id === item.product_id)
+
+    if (!product) {
+      throw new Error(`محصول ${item.product_id} پیدا نشد.`)
+    }
+
+    orderItems.push({
+      order_id: order.id,
+      product_id: product.id,
+      quantity: item.quantity,
+      unit_price: product.price,
+      total_price: product.price * item.quantity,
+      product_title: product.title,
+      product_slug: product.slug,
+      product_image: product.image,
     })
-    .filter(Boolean) // حذف آیتم‌های null
-
-  if (orderItems.length === 0) {
-    throw new Error("هیچ آیتم معتبری برای ثبت سفارش وجود ندارد.")
   }
 
   const { error: orderItemsError } = await supabase
@@ -154,6 +162,5 @@ export async function createOrder(
 
   if (paymentError) throw paymentError
 
-  // ۱۲. برگرداندن سفارش (برای استفاده در مرحله بعد)
   return order
 }
