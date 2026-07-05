@@ -1,0 +1,190 @@
+import { supabase } from "@/lib/supabase"
+
+export async function createOrder(
+  addressId: string,
+  shippingMethodId: string
+) {
+  // کاربر فعلی
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser()
+
+  if (userError || !user) {
+    throw new Error("کاربر وارد نشده است.")
+  }
+
+  // آدرس
+  const { data: address, error: addressError } = await supabase
+    .from("addresses")
+    .select("*")
+    .eq("id", addressId)
+    .single()
+
+  if (addressError || !address) {
+    throw new Error("آدرس پیدا نشد.")
+  }
+
+  // روش ارسال
+  const { data: shipping, error: shippingError } = await supabase
+    .from("shipping_methods")
+    .select("*")
+    .eq("id", shippingMethodId)
+    .single()
+
+  if (shippingError || !shipping) {
+    throw new Error("روش ارسال پیدا نشد.")
+  }
+
+  // سبد خرید
+  const { data: cartItems, error: cartError } = await supabase
+    .from("cart_items")
+    .select(`
+      quantity,
+      products (
+        id,
+        title,
+        slug,
+        price,
+        image
+      )
+    `)
+    .eq("user_id", user.id)
+
+  if (cartError) throw cartError
+
+  if (!cartItems || cartItems.length === 0) {
+    throw new Error("سبد خرید خالی است.")
+  }
+
+  //---------------------------------------
+  // محاسبه مبلغ
+  //---------------------------------------
+
+  let subtotal = 0
+
+  for (const item of cartItems) {
+    const product = item.products as any
+
+    subtotal += product.price * item.quantity
+  }
+
+  const shippingPrice = shipping.price
+
+  const total = subtotal + shippingPrice
+
+  //---------------------------------------
+  // شماره سفارش
+  //---------------------------------------
+
+  const orderNumber =
+    "ORD-" +
+    Date.now().toString()
+
+  //---------------------------------------
+  // ساخت سفارش
+  //---------------------------------------
+
+  const { data: order, error: orderError } = await supabase
+    .from("orders")
+    .insert({
+      order_number: orderNumber,
+
+      user_id: user.id,
+
+      address_id: address.id,
+
+      status: "pending",
+
+      payment_status: "pending",
+
+      shipping_method: shipping.code,
+
+      shipping_title: shipping.title,
+
+      shipping_price: shippingPrice,
+
+      subtotal,
+
+      discount: 0,
+
+      total,
+
+      receiver_name:
+        address.first_name +
+        " " +
+        address.last_name,
+
+      receiver_phone: address.phone,
+
+      address_text: address.line1,
+
+      city: address.city,
+
+      province: address.state,
+
+      postal_code: address.postal_code,
+
+      payment_method: "zarinpal",
+    })
+    .select()
+    .single()
+
+  if (orderError) throw orderError
+
+  //---------------------------------------
+  // آیتم‌های سفارش
+  //---------------------------------------
+
+  const orderItems = cartItems.map((item) => {
+    const product = item.products as any
+
+    return {
+      order_id: order.id,
+
+      product_id: product.id,
+
+      quantity: item.quantity,
+
+      unit_price: product.price,
+
+      total_price: product.price * item.quantity,
+
+      product_title: product.title,
+
+      product_slug: product.slug,
+
+      product_image: product.image,
+    }
+  })
+
+  const { error: orderItemsError } = await supabase
+    .from("order_items")
+    .insert(orderItems)
+
+  if (orderItemsError) throw orderItemsError
+
+  //---------------------------------------
+  // ساخت رکورد پرداخت
+  //---------------------------------------
+
+  const { error: paymentError } = await supabase
+    .from("payments")
+    .insert({
+      user_id: user.id,
+
+      order_id: order.id,
+
+      gateway: "zarinpal",
+
+      amount: total,
+
+      status: "pending",
+    })
+
+  if (paymentError) throw paymentError
+
+  //---------------------------------------
+
+  return order
+}
