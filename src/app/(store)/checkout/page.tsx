@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useEffect, useState } from "react"
@@ -6,42 +5,64 @@ import { useRouter } from "next/navigation"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Stepper, Step } from "@/components/ui/stepper" // فرض بر این است که این کامپوننت موجود است یا می‌توانید خودتان بسازید
+
 import { loadCheckoutCart } from "@/lib/checkout/cart"
 import { getAddresses } from "@/lib/addresses"
-import { getShippingMethods } from "@/lib/shipping" // این تابع را باید بسازید
+// import { getShippingMethods } from "@/lib/shipping"   // بعداً اضافه می‌شود
+
 import { useUser } from "@/hooks/use-user"
 
 import type { CheckoutCart } from "@/lib/checkout/cart"
 import type { Address } from "@/types"
-import type { ShippingMethod } from "@/types" // فرض بر وجود این تایپ
+
+// نوع موقت برای روش ارسال (بعداً از دیتابیس خوانده می‌شود)
+type ShippingMethod = {
+  id: string
+  name: string
+  description: string
+  delivery_time: string
+  price: number
+}
 
 export default function CheckoutPage() {
   const router = useRouter()
   const { loading: userLoading, isAuthenticated } = useUser()
 
-  // حالت‌های صفحه
   const [loading, setLoading] = useState(true)
   const [cart, setCart] = useState<CheckoutCart | null>(null)
   const [addresses, setAddresses] = useState<Address[]>([])
-  const [shippingMethods, setShippingMethods] = useState<ShippingMethod[]>([])
+
+  // داده‌های آزمایشی روش ارسال (تا زمان اتصال به دیتابیس)
+  const [shippingMethods] = useState<ShippingMethod[]>([
+    {
+      id: "post",
+      name: "پست پیشتاز",
+      description: "ارسال با پست",
+      delivery_time: "۲ تا ۴ روز کاری",
+      price: 59000,
+    },
+    {
+      id: "tipax",
+      name: "تیپاکس",
+      description: "ارسال با تیپاکس",
+      delivery_time: "۱ تا ۲ روز کاری",
+      price: 89000,
+    },
+  ])
 
   // انتخاب‌های کاربر
   const [selectedAddressId, setSelectedAddressId] = useState("")
   const [selectedShippingId, setSelectedShippingId] = useState("")
   const [paymentMethod, setPaymentMethod] = useState<"zarinpal" | "wallet">("zarinpal")
 
-  // مرحله فعلی ویزارد (۱ تا ۳)
+  // مرحله ویزارد (۱ تا ۳)
   const [step, setStep] = useState(1)
 
-  // محاسبه هزینه ارسال بر اساس روش انتخاب‌شده
+  // محاسبه هزینه ارسال
   const selectedShipping = shippingMethods.find((m) => m.id === selectedShippingId)
   const shippingCost = selectedShipping?.price || 0
-
-  // جمع کل (سبد + ارسال)
   const total = cart ? cart.subtotal + shippingCost : 0
 
-  // بارگذاری اولیه
   useEffect(() => {
     if (userLoading) return
     if (!isAuthenticated) {
@@ -51,22 +72,20 @@ export default function CheckoutPage() {
 
     async function loadData() {
       try {
-        const [cartData, addressData, shippingData] = await Promise.all([
+        const [cartData, addressData] = await Promise.all([
           loadCheckoutCart(),
           getAddresses(),
-          getShippingMethods(),
+          // getShippingMethods(), // بعداً اضافه می‌شود
         ])
 
         setCart(cartData)
         setAddresses(addressData)
-        setShippingMethods(shippingData)
 
-        // انتخاب پیش‌فرض آدرس
         const defaultAddress = addressData.find((a) => a.isDefault) ?? addressData[0]
         if (defaultAddress) setSelectedAddressId(defaultAddress.id)
 
-        // انتخاب پیش‌فرض روش ارسال (مثلاً اولین مورد)
-        if (shippingData.length > 0) setSelectedShippingId(shippingData[0].id)
+        // انتخاب پیش‌فرض اولین روش ارسال
+        if (shippingMethods.length > 0) setSelectedShippingId(shippingMethods[0].id)
       } catch (error) {
         console.error("خطا در بارگذاری اطلاعات:", error)
       } finally {
@@ -75,18 +94,12 @@ export default function CheckoutPage() {
     }
 
     loadData()
-  }, [userLoading, isAuthenticated, router])
+  }, [userLoading, isAuthenticated, router, shippingMethods])
 
-  // نمایش بارگذاری
   if (userLoading || loading) {
-    return (
-      <div className="container py-10 text-center">
-        در حال بارگذاری اطلاعات...
-      </div>
-    )
+    return <div className="container py-10 text-center">در حال بارگذاری اطلاعات...</div>
   }
 
-  // بررسی وجود سبد خرید
   if (!cart || cart.items.length === 0) {
     return (
       <div className="container py-10 text-center">
@@ -98,27 +111,42 @@ export default function CheckoutPage() {
     )
   }
 
-  // تابع پرداخت (فعلاً فقط لاگ)
+  // تابع پرداخت (موقت)
   const handlePayment = () => {
-    // در اینجا عملیات ثبت سفارش و اتصال به درگاه انجام می‌شود
     alert(`پرداخت با روش ${paymentMethod} به مبلغ ${total.toLocaleString()} ریال`)
+    // در آینده: ثبت سفارش و اتصال به درگاه
   }
 
   return (
     <div className="container mx-auto max-w-6xl py-10">
       <h1 className="text-3xl font-bold mb-8">تسویه حساب</h1>
 
-      {/* استپر */}
-      <div className="mb-8">
-        <Stepper activeStep={step}>
-          <Step label="آدرس" />
-          <Step label="ارسال" />
-          <Step label="پرداخت" />
-        </Stepper>
+      {/* استپر ساده (جایگزین کامپوننت حذف‌شده) */}
+      <div className="flex items-center justify-center gap-4 mb-8">
+        {[1, 2, 3].map((s) => (
+          <div key={s} className="flex items-center">
+            <div
+              className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ${
+                s === step
+                  ? "bg-primary text-primary-foreground"
+                  : s < step
+                  ? "bg-green-500 text-white"
+                  : "bg-muted text-muted-foreground"
+              }`}
+            >
+              {s}
+            </div>
+            {s < 3 && (
+              <div
+                className={`w-16 h-0.5 mx-2 ${s < step ? "bg-green-500" : "bg-muted"}`}
+              />
+            )}
+          </div>
+        ))}
       </div>
 
       <div className="grid lg:grid-cols-3 gap-8">
-        {/* ستون اصلی (مراحل) */}
+        {/* ستون اصلی */}
         <div className="lg:col-span-2 space-y-6">
           {/* مرحله ۱: آدرس */}
           <Card className={step !== 1 ? "opacity-60" : ""}>
@@ -180,38 +208,34 @@ export default function CheckoutPage() {
               <CardTitle>روش ارسال</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {shippingMethods.length === 0 ? (
-                <p className="text-muted-foreground">هیچ روش ارسالی در دسترس نیست.</p>
-              ) : (
-                shippingMethods.map((method) => (
-                  <label
-                    key={method.id}
-                    className={`flex items-center justify-between border rounded-lg p-4 cursor-pointer transition ${
-                      selectedShippingId === method.id
-                        ? "border-primary bg-primary/5"
-                        : "hover:bg-muted/50"
-                    }`}
-                  >
-                    <div>
-                      <p className="font-medium">{method.name}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {method.description} - {method.delivery_time}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <span className="font-semibold">
-                        {method.price.toLocaleString()} ریال
-                      </span>
-                      <input
-                        type="radio"
-                        name="shipping"
-                        checked={selectedShippingId === method.id}
-                        onChange={() => setSelectedShippingId(method.id)}
-                      />
-                    </div>
-                  </label>
-                ))
-              )}
+              {shippingMethods.map((method) => (
+                <label
+                  key={method.id}
+                  className={`flex items-center justify-between border rounded-lg p-4 cursor-pointer transition ${
+                    selectedShippingId === method.id
+                      ? "border-primary bg-primary/5"
+                      : "hover:bg-muted/50"
+                  }`}
+                >
+                  <div>
+                    <p className="font-medium">{method.name}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {method.description} - {method.delivery_time}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <span className="font-semibold">
+                      {method.price.toLocaleString()} ریال
+                    </span>
+                    <input
+                      type="radio"
+                      name="shipping"
+                      checked={selectedShippingId === method.id}
+                      onChange={() => setSelectedShippingId(method.id)}
+                    />
+                  </div>
+                </label>
+              ))}
               {step === 2 && (
                 <Button
                   className="w-full mt-4"
@@ -269,7 +293,6 @@ export default function CheckoutPage() {
                   />
                 </label>
               </div>
-
               {step === 3 && (
                 <Button className="w-full mt-6" onClick={handlePayment}>
                   پرداخت نهایی
@@ -307,7 +330,11 @@ export default function CheckoutPage() {
                 <span>مبلغ قابل پرداخت</span>
                 <span>{total.toLocaleString()} ریال</span>
               </div>
-              <Button className="w-full mt-4" onClick={() => setStep(3)} disabled={step === 3}>
+              <Button
+                className="w-full mt-4"
+                onClick={() => setStep(3)}
+                disabled={step === 3}
+              >
                 پرداخت
               </Button>
             </CardContent>
