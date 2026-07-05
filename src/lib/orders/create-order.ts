@@ -4,7 +4,7 @@ export async function createOrder(
   addressId: string,
   shippingMethodId: string
 ) {
-  // کاربر فعلی
+  // ۱. کاربر فعلی
   const {
     data: { user },
     error: userError,
@@ -14,7 +14,7 @@ export async function createOrder(
     throw new Error("کاربر وارد نشده است.")
   }
 
-  // آدرس
+  // ۲. آدرس
   const { data: address, error: addressError } = await supabase
     .from("addresses")
     .select("*")
@@ -25,7 +25,7 @@ export async function createOrder(
     throw new Error("آدرس پیدا نشد.")
   }
 
-  // روش ارسال
+  // ۳. روش ارسال
   const { data: shipping, error: shippingError } = await supabase
     .from("shipping_methods")
     .select("*")
@@ -36,12 +36,10 @@ export async function createOrder(
     throw new Error("روش ارسال پیدا نشد.")
   }
 
-  // ----------------------------------------------
-  // مرحله ۱: دریافت آیتم‌های سبد خرید (بدون JOIN)
-  // ----------------------------------------------
+  // ۴. دریافت آیتم‌های سبد خرید
   const { data: cartItems, error: cartError } = await supabase
     .from("cart_items")
-    .select("*") // ✅ فقط خود cart_items
+    .select("*")
     .eq("user_id", user.id)
 
   if (cartError) throw cartError
@@ -50,42 +48,43 @@ export async function createOrder(
     throw new Error("سبد خرید خالی است.")
   }
 
-  // ----------------------------------------------
-  // مرحله ۲: دریافت اطلاعات محصولات به صورت مجزا
-  // ----------------------------------------------
+  // ۵. دریافت اطلاعات محصولات
   const productIds = cartItems.map((i) => i.product_id)
 
   const { data: products, error: productsError } = await supabase
-    .from("products") // ⚠️ اگر خطا داد، به "products_v2" تغییر بده
+    .from("products") // همان products که گفتی
     .select("*")
     .in("id", productIds)
 
   if (productsError) throw productsError
 
-  // ----------------------------------------------
-  // محاسبه مبلغ (مرحله ۳)
-  // ----------------------------------------------
+  // ۶. چک موجودی (نکته شماره ۷ شما)
+  for (const item of cartItems) {
+    const product = products?.find((p) => p.id === item.product_id)
+    if (!product) {
+      throw new Error(`محصول با شناسه ${item.product_id} یافت نشد.`)
+    }
+    if (product.stock < item.quantity) {
+      throw new Error(`موجودی محصول "${product.title}" کافی نیست.`)
+    }
+  }
+
+  // ۷. محاسبه مبلغ
   let subtotal = 0
 
   for (const item of cartItems) {
-    const product = products!.find(
-      (p) => p.id === item.product_id
-    )
-
-    if (!product) continue
-
+    const product = products!.find((p) => p.id === item.product_id)
+    if (!product) continue // برای امنیت بیشتر
     subtotal += product.price * item.quantity
   }
 
   const shippingPrice = shipping.price
   const total = subtotal + shippingPrice
 
-  // شماره سفارش
+  // ۸. شماره سفارش (فعلاً همان ORD-... ولی بعداً اصلاح می‌کنیم)
   const orderNumber = "ORD-" + Date.now().toString()
 
-  // ----------------------------------------------
-  // ساخت سفارش
-  // ----------------------------------------------
+  // ۹. ساخت سفارش
   const { data: order, error: orderError } = await supabase
     .from("orders")
     .insert({
@@ -113,25 +112,28 @@ export async function createOrder(
 
   if (orderError) throw orderError
 
-  // ----------------------------------------------
-  // مرحله ۴: آیتم‌های سفارش (با اطلاعات محصولات واکشی‌شده)
-  // ----------------------------------------------
-  const orderItems = cartItems.map((item) => {
-    const product = products!.find(
-      (p) => p.id === item.product_id
-    )! // مطمئنیم که وجود دارد
+  // ۱۰. ساخت آیتم‌های سفارش (با مدیریت null و حذف !)
+  const orderItems = cartItems
+    .map((item) => {
+      const product = products?.find((p) => p.id === item.product_id)
+      if (!product) return null // اگر محصول وجود نداشت، رد می‌شود
 
-    return {
-      order_id: order.id,
-      product_id: product.id,
-      quantity: item.quantity,
-      unit_price: product.price,
-      total_price: product.price * item.quantity,
-      product_title: product.title,
-      product_slug: product.slug,
-      product_image: product.image,
-    }
-  })
+      return {
+        order_id: order.id,
+        product_id: product.id,
+        quantity: item.quantity,
+        unit_price: product.price,
+        total_price: product.price * item.quantity,
+        product_title: product.title,
+        product_slug: product.slug,
+        product_image: product.image,
+      }
+    })
+    .filter(Boolean) // حذف آیتم‌های null
+
+  if (orderItems.length === 0) {
+    throw new Error("هیچ آیتم معتبری برای ثبت سفارش وجود ندارد.")
+  }
 
   const { error: orderItemsError } = await supabase
     .from("order_items")
@@ -139,9 +141,7 @@ export async function createOrder(
 
   if (orderItemsError) throw orderItemsError
 
-  // ----------------------------------------------
-  // ساخت رکورد پرداخت
-  // ----------------------------------------------
+  // ۱۱. ساخت رکورد پرداخت
   const { error: paymentError } = await supabase
     .from("payments")
     .insert({
@@ -154,5 +154,6 @@ export async function createOrder(
 
   if (paymentError) throw paymentError
 
+  // ۱۲. برگرداندن سفارش (برای استفاده در مرحله بعد)
   return order
 }
