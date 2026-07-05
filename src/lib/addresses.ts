@@ -67,18 +67,47 @@ export async function createAddress(values: any) {
   const {
     data: { user },
   } = await getUser()
+
   if (!user) throw new Error("No User")
+
+  const dbAddress = {
+    user_id: user.id,
+    type: values.type,
+    first_name: values.firstName,
+    last_name: values.lastName,
+    line1: values.line1,
+    line2: values.line2 ?? null,
+    city: values.city,
+    state: values.state,
+    postal_code: values.postalCode,
+    country: values.country,
+    phone: values.phone ?? null,
+    is_default: values.isDefault ?? false,
+  }
 
   const { data, error } = await supabase
     .from("addresses")
-    .insert({ ...values, user_id: user.id })
+    .insert(dbAddress)
     .select()
     .single()
 
   if (error) throw error
-  return data
-}
 
+  return {
+    id: data.id,
+    type: data.type,
+    firstName: data.first_name,
+    lastName: data.last_name,
+    line1: data.line1,
+    line2: data.line2,
+    city: data.city,
+    state: data.state,
+    postalCode: data.postal_code,
+    country: data.country,
+    phone: data.phone,
+    isDefault: data.is_default,
+  }
+}
 // ===== Compatibility =====
 export async function addAddress(values: any) {
   return createAddress(values)
