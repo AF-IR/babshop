@@ -3,9 +3,8 @@
 // ارتباط با درگاه زرین‌پال (نسخه ۴ API) - نسخه نهایی
 // ============================================================
 
-const ZARINPAL_API = "https://api.zarinpal.com/pg/v4/payment"
-const START_PAY_URL = "https://payment.zarinpal.com/pg/StartPay"
-
+const ZARINPAL_API = "https://sandbox.zarinpal.com/pg/v4/payment"
+const START_PAY_URL = "https://sandbox.zarinpal.com/pg/StartPay"
 // ✅ پیشنهاد ۱: بررسی وجود Merchant ID در زمان اجرا
 const MERCHANT_ID = process.env.ZARINPAL_MERCHANT_ID
 
