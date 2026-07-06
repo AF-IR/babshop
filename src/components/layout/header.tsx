@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { SearchModal } from "@/components/search/search-modal"
-import { shopLinks, mobileMenuSections } from "@/lib/navigation"
+import { shopLinks } from "@/lib/navigation"  // فقط shopLinks
 import { siteConfig } from "@/lib/config"
 import { useTranslations } from "next-intl"
 import { useState, useEffect } from "react"
@@ -54,7 +54,7 @@ export function Header({ categories = [] }: HeaderProps) {
     router.push("/")
   }
 
-  // آیتم‌های ویژه (داخلی، بدون نیاز به import)
+  // آیتم‌های ویژه (داخلی)
   const specialItems = [
     { name: "شگفت‌انگیزها", href: "/discounts", icon: <Percent className="h-4 w-4 text-red-500" /> },
     { name: "پرفروش‌ترین‌ها", href: "/bestsellers", icon: <Flame className="h-4 w-4 text-orange-500" /> },
@@ -77,7 +77,7 @@ export function Header({ categories = [] }: HeaderProps) {
                 </SheetTrigger>
                 <SheetContent side="right" className="!w-full !gap-0 sm:!w-80 p-0" showCloseButton={false}>
                   <div className="flex h-full flex-col overflow-y-auto bg-white">
-                    {/* هدر منو با لوگو و دکمه بستن */}
+                    {/* هدر منو */}
                     <div className="flex items-center justify-between border-b border-neutral-100 px-4 py-3">
                       <Link href="/" onClick={() => setMobileMenuOpen(false)} className="text-xl font-bold text-red-600">
                         {siteConfig.name}
@@ -89,26 +89,66 @@ export function Header({ categories = [] }: HeaderProps) {
                       </button>
                     </div>
 
-                    {/* بخش‌های منوی موبایل (از navigation.ts) */}
+                    {/* بخش‌های منوی موبایل با shopLinks */}
                     <div className="flex-1 overflow-y-auto px-4 py-3">
-                      {mobileMenuSections.map((section, idx) => (
-                        <div key={idx} className="mb-6">
-                          <h3 className="mb-2 text-sm font-bold text-neutral-500">{section.title}</h3>
-                          <ul className="space-y-1">
-                            {section.items.map((item) => (
-                              <li key={item.href}>
-                                <Link
-                                  href={item.href}
-                                  onClick={() => setMobileMenuOpen(false)}
-                                  className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-neutral-700 hover:bg-red-50 hover:text-red-600"
-                                >
-                                  {item.name}
-                                </Link>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      ))}
+                      {/* بخش اصلی: لینک‌های فروشگاه */}
+                      <div className="mb-6">
+                        <h3 className="mb-2 text-sm font-bold text-neutral-500">دسته‌بندی کالاها</h3>
+                        <ul className="space-y-1">
+                          {shopLinks.map((item) => (
+                            <li key={item.href}>
+                              <Link
+                                href={item.href}
+                                onClick={() => setMobileMenuOpen(false)}
+                                className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-neutral-700 hover:bg-red-50 hover:text-red-600"
+                              >
+                                {item.name}
+                              </Link>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+
+                      {/* بخش ویژه */}
+                      <div className="mb-6">
+                        <h3 className="mb-2 text-sm font-bold text-neutral-500">پیشنهادات ویژه</h3>
+                        <ul className="space-y-1">
+                          {specialItems.map((item) => (
+                            <li key={item.href}>
+                              <Link
+                                href={item.href}
+                                onClick={() => setMobileMenuOpen(false)}
+                                className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-neutral-700 hover:bg-red-50 hover:text-red-600"
+                              >
+                                {item.icon}
+                                {item.name}
+                              </Link>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+
+                      {/* بخش خدمات مشتریان (ثابت) */}
+                      <div className="mb-6">
+                        <h3 className="mb-2 text-sm font-bold text-neutral-500">خدمات مشتریان</h3>
+                        <ul className="space-y-1">
+                          <li>
+                            <Link href="/account/orders" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-neutral-700 hover:bg-red-50 hover:text-red-600">
+                              پیگیری سفارش
+                            </Link>
+                          </li>
+                          <li>
+                            <Link href="/policies/returns" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-neutral-700 hover:bg-red-50 hover:text-red-600">
+                              شرایط بازگشت کالا
+                            </Link>
+                          </li>
+                          <li>
+                            <Link href="/faq" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-neutral-700 hover:bg-red-50 hover:text-red-600">
+                              راهنمای خرید
+                            </Link>
+                          </li>
+                        </ul>
+                      </div>
 
                       {/* بخش حساب کاربری */}
                       <div className="border-t border-neutral-100 pt-4 mt-4">
@@ -128,7 +168,7 @@ export function Header({ categories = [] }: HeaderProps) {
                               <User className="h-5 w-5" /> پروفایل من
                             </Link>
                             <Link href="/account/orders" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-red-50 hover:text-red-600">
-                              <span>سفارش‌های من</span>
+                              سفارش‌های من
                             </Link>
                             <button onClick={() => { setMobileMenuOpen(false); handleLogout(); }} className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50">
                               <LogOut className="h-5 w-5" /> خروج
@@ -142,7 +182,7 @@ export function Header({ categories = [] }: HeaderProps) {
                       </div>
                     </div>
 
-                    {/* فوتر منو با لینک‌های مفید */}
+                    {/* فوتر منو */}
                     <div className="border-t border-neutral-100 px-4 py-3 bg-neutral-50">
                       <div className="flex flex-wrap items-center gap-4 text-xs text-neutral-500">
                         <Link href="/policies/privacy" className="hover:text-red-600">حریم خصوصی</Link>
@@ -189,7 +229,7 @@ export function Header({ categories = [] }: HeaderProps) {
                       <User className="mr-2 h-4 w-4" /> پروفایل من
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => router.push("/account/orders")} className="cursor-pointer rounded-lg hover:bg-neutral-50">
-                      <span>سفارش‌های من</span>
+                      سفارش‌های من
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-red-600 rounded-lg hover:bg-red-50">
@@ -223,7 +263,7 @@ export function Header({ categories = [] }: HeaderProps) {
             </button>
           </div>
 
-          {/* منوی ناوبری دسکتاپ (بدون specialLinks) */}
+          {/* منوی ناوبری دسکتاپ */}
           <nav className="hidden lg:flex items-center gap-6 pb-3 text-sm font-medium text-neutral-600 mt-1">
             {/* دسته‌بندی کالاها */}
             <div className="group relative">
@@ -250,7 +290,7 @@ export function Header({ categories = [] }: HeaderProps) {
 
             <span className="h-5 w-px bg-neutral-300"></span>
 
-            {/* آیتم‌های ویژه (داخلی) */}
+            {/* آیتم‌های ویژه */}
             {specialItems.map((item) => (
               <Link key={item.href} href={item.href} className="flex items-center gap-1.5 hover:text-red-600 transition-colors">
                 {item.icon}
