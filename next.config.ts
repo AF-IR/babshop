@@ -4,14 +4,15 @@ import { redirects as redirectRules } from "./src/lib/redirects";
 
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
-
 const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
+      // ✅ همه زیردامنه‌های picofile.com (s1, s2, ..., s100, ...)
       {
         protocol: "https",
-        hostname: "s33.picofile.com",
+        hostname: "*.picofile.com",
       },
+      // ✅ باقی دامنه‌های قبلی
       {
         protocol: "https",
         hostname: "placehold.co",
@@ -26,7 +27,6 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  // Redirects are defined in src/lib/redirects.ts  https://image.torob.com/base/images/sO/9c/sO9cXKDCU9oRXTr7.jpg_/0x352.avif
   async redirects() {
     return redirectRules;
   },
