@@ -6,8 +6,7 @@
 const ZARINPAL_API = "https://sandbox.zarinpal.com/pg/v4/payment"
 const START_PAY_URL = "https://sandbox.zarinpal.com/pg/StartPay"
 // ✅ پیشنهاد ۱: بررسی وجود Merchant ID در زمان اجرا
-const MERCHANT_ID = process.env.ZARINPAL_MERCHANT_ID
-
+const MERCHANT_ID = "11111111-1111-1111-1111-111111111111"
 export interface PaymentRequestInput {
   amount: number // تومان
   description: string
