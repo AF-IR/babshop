@@ -37,7 +37,7 @@ export function BannerSlider({ banners }: { banners: Banner[] }) {
     return () => clearInterval(timer)
   }, [banners, isHovered, nextSlide])
 
-  // تشخیص کلیک/درگ روی بنر
+  // تشخیص کلیک/درگ روی بنر (ماوس)
   const handleMouseDown = (e: React.MouseEvent) => {
     dragStartRef.current = { x: e.clientX, y: e.clientY }
     setIsDragging(false)
@@ -58,7 +58,6 @@ export function BannerSlider({ banners }: { banners: Banner[] }) {
     const dy = e.clientY - dragStartRef.current.y
     const distance = Math.sqrt(dx * dx + dy * dy)
 
-    // اگر حرکت بیش از 10 پیکسل بود، کلیک محسوب نمی‌شود
     if (distance > 10) {
       setIsDragging(true)
     } else {
@@ -72,7 +71,6 @@ export function BannerSlider({ banners }: { banners: Banner[] }) {
       e.preventDefault()
       return
     }
-    // اگر لینک وجود داشته باشد، توسط خود Link هدایت می‌شود
   }
 
   // مدیریت لمس موبایل
@@ -97,15 +95,9 @@ export function BannerSlider({ banners }: { banners: Banner[] }) {
     const touchEnd = e.changedTouches[0].clientX
     const diff = touchStart - touchEnd
 
-    // اگر حرکت افقی بیشتر از 50 پیکسل بود، اسلاید عوض کن
     if (Math.abs(diff) > 50) {
       if (diff > 0) nextSlide()
       else prevSlide()
-    }
-
-    // اگر حرکت کم بود و درگ نبود، کلیک محسوب می‌شود (لینک اجرا می‌شود)
-    if (Math.abs(diff) < 10 && !isDragging) {
-      // اجازه می‌دهیم لینک عمل کند
     }
 
     dragStartRef.current = null
@@ -114,12 +106,10 @@ export function BannerSlider({ banners }: { banners: Banner[] }) {
 
   if (!banners || banners.length === 0) return null
 
-  const currentBanner = banners[current]
-
   return (
     <div
       className="group relative mx-auto mt-6 w-full max-w-[1380px] overflow-hidden rounded-2xl shadow-lg px-4 sm:px-6 lg:px-8"
-      style={{ height: "clamp(200px, 35vh, 450px)" }}
+      style={{ aspectRatio: "1920 / 866" }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onTouchStart={handleTouchStart}
@@ -143,23 +133,23 @@ export function BannerSlider({ banners }: { banners: Banner[] }) {
             )}
             aria-label={banner.title || "بنر"}
           >
-            {/* تصویر */}
+            {/* تصویر با object-contain برای نمایش کامل */}
             <Image
               src={banner.image_url}
               alt={banner.title || "بنر فروشگاه"}
               fill
               priority={index === 0}
-              className="object-cover"
+              className="object-contain"
               sizes="(max-width: 768px) 100vw, 1440px"
             />
 
-            {/* گرادیانت ملایم برای خوانایی متن */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+            {/* گرادیانت ملایم برای خوانایی متن - فقط در پایین */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent pointer-events-none" />
 
             {/* محتوای متنی با انیمیشن */}
             <div
               className={cn(
-                "absolute inset-0 flex flex-col items-center justify-end pb-8 sm:pb-12 lg:pb-16 px-6 text-white transition-all duration-700 ease-out",
+                "absolute inset-0 flex flex-col items-center justify-end pb-8 sm:pb-12 lg:pb-16 px-6 text-white transition-all duration-700 ease-out pointer-events-none",
                 isActive ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
               )}
             >
@@ -173,8 +163,8 @@ export function BannerSlider({ banners }: { banners: Banner[] }) {
                   {banner.subtitle}
                 </p>
               )}
-              {/* یک نشانگر کوچک برای کلیک */}
-              <span className="mt-4 inline-block rounded-full border border-white/40 bg-white/10 px-4 py-1.5 text-xs font-medium backdrop-blur-sm transition-all hover:bg-white/20">
+              {/* نشانگر کوچک برای کلیک */}
+              <span className="mt-4 inline-block rounded-full border border-white/40 bg-white/10 px-4 py-1.5 text-xs font-medium backdrop-blur-sm transition-all hover:bg-white/20 pointer-events-auto">
                 مشاهده و خرید
               </span>
             </div>
