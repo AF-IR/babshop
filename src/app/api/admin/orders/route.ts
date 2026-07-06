@@ -3,14 +3,14 @@ import {
   apiSuccess,
 } from "@/lib/admin"
 
-import { verifyAdmin } from "@/lib/admin"
+import { requireAdmin } from "@/lib/admin"
 
 import { getOrders } from "@/lib/admin/orders"
 
 export async function GET(request: Request) {
   try {
 
-    await verifyAdmin()
+    await requireAdmin()
 
     const { searchParams } =
       new URL(request.url)
