@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { usePathname, useRouter } from "next/navigation"
 import { Search, ShoppingBag, User, Menu, Heart, LogOut, ChevronDown, Percent, Flame, Gift } from "lucide-react"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import {
@@ -16,7 +17,6 @@ import { siteConfig } from "@/lib/config"
 import { useState, useEffect } from "react"
 import type { Category } from "@/types"
 import { useCartStore } from "@/store/cart"
-import { useRouter } from "next/navigation"
 import { useUser } from "@/hooks/use-user"
 import { supabase } from "@/lib/supabase"
 
@@ -31,9 +31,15 @@ export function Header({ categories = [] }: HeaderProps) {
   const getItemCount = useCartStore((s) => s.getItemCount)
   const { user, isAuthenticated } = useUser()
   const router = useRouter()
+  const pathname = usePathname() // ← برای تشخیص تغییر مسیر
   const [mounted, setMounted] = useState(false)
   useEffect(() => setMounted(true), [])
   const itemCount = mounted ? getItemCount() : 0
+
+  // بستن خودکار منوی موبایل هنگام تغییر مسیر
+  useEffect(() => {
+    setMobileMenuOpen(false)
+  }, [pathname])
 
   // میانبر جستجو (Ctrl+K)
   useEffect(() => {
@@ -94,7 +100,7 @@ export function Header({ categories = [] }: HeaderProps) {
                       </button>
                     </div>
 
-                    {/* محتوای منو */}
+                    {/* محتوای منو (همانند قبل) */}
                     <div className="flex-1 overflow-y-auto px-4 py-3">
                       {/* بخش اصلی: دسته‌بندی */}
                       <div className="mb-6">
