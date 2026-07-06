@@ -20,6 +20,10 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "image.torob.com",
       },
+      {
+        protocol: "https",
+        hostname: "via.placeholder.com",
+      },
     ],
   },
   // Redirects are defined in src/lib/redirects.ts  https://image.torob.com/base/images/sO/9c/sO9cXKDCU9oRXTr7.jpg_/0x352.avif
