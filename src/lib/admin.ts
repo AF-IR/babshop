@@ -1,9 +1,9 @@
 // ======================================================
 // src/lib/admin.ts
 // ======================================================
-
+export * from "./admin-auth"
 import { supabaseAdmin } from "./supabase-admin"
-
+export * from "./admin-auth"
 export { supabaseAdmin }
 // ======================================================
 // src/lib/admin.ts
