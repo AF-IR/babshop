@@ -7,6 +7,7 @@ import { siteConfig } from "@/lib/config"
 import "./globals.css"
 import { CartProvider } from "@/app/providers/cart-provider"
 
+
 // ✅ تعریف فونت
 const vazir = Vazirmatn({
   subsets: ["arabic"],
