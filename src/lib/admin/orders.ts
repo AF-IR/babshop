@@ -5,24 +5,35 @@
 
 import { supabaseAdmin } from "@/lib/supabase-admin"
 
+//------------------------------------------------------
+// فیلترها
+//------------------------------------------------------
+
 export interface AdminOrderFilters {
   page?: number
-  pageSize?: number
-  status?: string
-  paymentStatus?: string
+  limit?: number
   search?: string
+  status?: string
 }
 
-export async function getOrders(
-  filters: AdminOrderFilters = {}
-) {
+//------------------------------------------------------
+// دریافت لیست سفارش‌ها
+//------------------------------------------------------
+
+export async function getOrders(filters: AdminOrderFilters = {}) {
   const page = filters.page ?? 1
-  const pageSize = filters.pageSize ?? 20
+  const limit = filters.limit ?? 20
+
+  const from = (page - 1) * limit
+  const to = from + limit - 1
 
   let query = supabaseAdmin
     .from("orders")
     .select("*", {
       count: "exact",
+    })
+    .order("created_at", {
+      ascending: false,
     })
 
   //------------------------------------------------------
@@ -31,17 +42,6 @@ export async function getOrders(
 
   if (filters.status) {
     query = query.eq("status", filters.status)
-  }
-
-  //------------------------------------------------------
-  // وضعیت پرداخت
-  //------------------------------------------------------
-
-  if (filters.paymentStatus) {
-    query = query.eq(
-      "payment_status",
-      filters.paymentStatus
-    )
   }
 
   //------------------------------------------------------
@@ -55,27 +55,22 @@ export async function getOrders(
   }
 
   //------------------------------------------------------
-  // صفحه بندی
+  // صفحه‌بندی
   //------------------------------------------------------
 
-  const from = (page - 1) * pageSize
-  const to = from + pageSize - 1
+  query = query.range(from, to)
 
-  query = query
-    .order("created_at", {
-      ascending: false,
-    })
-    .range(from, to)
+  const { data, error, count } = await query
 
-  const { data, count, error } =
-    await query
-
-  if (error) throw error
+  if (error) {
+    throw error
+  }
 
   return {
-    items: data,
+    items: data ?? [],
     total: count ?? 0,
     page,
-    pageSize,
+    limit,
+    totalPages: Math.ceil((count ?? 0) / limit),
   }
 }
