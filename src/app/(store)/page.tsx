@@ -9,6 +9,7 @@ import { PLACEHOLDER_IMAGE } from "@/lib/constants"
 import { productRepository, categoryRepository } from "@/lib/repositories"
 import { BannerSlider } from "@/components/layout/banner-slider"
 
+
 // اتصال به سوپابیس برای دریافت بنرها
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
