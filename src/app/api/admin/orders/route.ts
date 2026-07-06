@@ -1,63 +1,46 @@
 import {
   apiException,
   apiSuccess,
-  supabaseAdmin,
 } from "@/lib/admin"
+
+import { verifyAdmin } from "@/lib/admin"
+
+import { getOrders } from "@/lib/admin/orders"
 
 export async function GET(request: Request) {
   try {
-    const { searchParams } = new URL(request.url)
 
-    const page = Number(searchParams.get("page") ?? 1)
-    const limit = Number(searchParams.get("limit") ?? 20)
+    await verifyAdmin()
 
-    const status = searchParams.get("status")
-    const paymentStatus = searchParams.get("payment_status")
-    const search = searchParams.get("search")
+    const { searchParams } =
+      new URL(request.url)
 
-    const from = (page - 1) * limit
-    const to = from + limit - 1
+    const page =
+      Number(searchParams.get("page") ?? 1)
 
-    let query = supabaseAdmin
-      .from("orders")
-      .select("*", {
-        count: "exact",
-      })
-      .order("created_at", {
-        ascending: false,
-      })
+    const pageSize =
+      Number(searchParams.get("pageSize") ?? 20)
 
-    if (status) {
-      query = query.eq("status", status)
-    }
+    const status =
+      searchParams.get("status") ?? undefined
 
-    if (paymentStatus) {
-      query = query.eq("payment_status", paymentStatus)
-    }
+    const paymentStatus =
+      searchParams.get("paymentStatus") ?? undefined
 
-    if (search) {
-      query = query.or(
-        `order_number.ilike.%${search}%,receiver_name.ilike.%${search}%`
-      )
-    }
+    const search =
+      searchParams.get("search") ?? undefined
 
-    const {
-      data,
-      count,
-      error,
-    } = await query.range(from, to)
-
-    if (error) throw error
-
-    return apiSuccess({
-      items: data,
-      pagination: {
+    const orders =
+      await getOrders({
         page,
-        limit,
-        total: count ?? 0,
-        totalPages: Math.ceil((count ?? 0) / limit),
-      },
-    })
+        pageSize,
+        status,
+        paymentStatus,
+        search,
+      })
+
+    return apiSuccess(orders)
+
   } catch (error) {
     return apiException(error)
   }
