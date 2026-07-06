@@ -33,7 +33,7 @@ export const siteConfig = {
   freeShippingThreshold: 1000000,
   taxRate: 0,
 
-  currency: "تومان",
+  currency: "IRR",
   locale: "fa-IR",
 
   copyrightYear: new Date().getFullYear(),
