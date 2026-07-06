@@ -56,3 +56,24 @@ export async function PATCH(
     return apiException(error)
   }
 }
+export async function DELETE(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params
+
+    const { error } = await supabaseAdmin
+      .from("products")
+      .delete()
+      .eq("id", id)
+
+    if (error) throw error
+
+    return apiSuccess({
+      deleted: true,
+    })
+  } catch (error) {
+    return apiException(error)
+  }
+}
