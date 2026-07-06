@@ -14,39 +14,52 @@ export interface AdminUser {
 export async function requireAdmin(
   request: NextRequest
 ): Promise<AdminUser> {
+
   //--------------------------------------------------
   // دریافت توکن
   //--------------------------------------------------
 
-  const authHeader = request.headers.get("authorization")
+  const authHeader =
+    request.headers.get("authorization")
 
   if (!authHeader) {
     throw new Error("Authorization header not found.")
   }
 
-  const token = authHeader.replace("Bearer ", "")
+  const token =
+    authHeader.replace("Bearer ", "")
 
   //--------------------------------------------------
-  // بررسی کاربر
+  // دریافت کاربر
   //--------------------------------------------------
 
   const {
     data: { user },
     error,
-  } = await supabaseAdmin.auth.getUser(token)
+  } =
+    await supabaseAdmin.auth.getUser(token)
 
   if (error || !user) {
     throw new Error("Unauthorized")
   }
 
   //--------------------------------------------------
-  // بررسی نقش ادمین
+  // بررسی ایمیل ادمین
   //--------------------------------------------------
 
-  const isAdmin =
-    user.user_metadata?.role === "admin"
+  const adminEmail =
+    process.env.ADMIN_EMAIL
 
-  if (!isAdmin) {
+  if (!adminEmail) {
+    throw new Error(
+      "ADMIN_EMAIL is not configured."
+    )
+  }
+
+  if (
+    user.email?.toLowerCase() !==
+    adminEmail.toLowerCase()
+  ) {
     throw new Error("Access denied")
   }
 
