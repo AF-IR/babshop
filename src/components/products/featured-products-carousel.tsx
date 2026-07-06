@@ -85,6 +85,25 @@ export function FeaturedProductsCarousel({
     return null
   }
 
+  // تابع کمکی برای دریافت اولین تصویر محصول
+  const getProductImage = (product: Product) => {
+    // اگر product.images آرایه است و اولین عنصر را دارد
+    if (product.images && product.images.length > 0) {
+      return {
+        url: product.images[0].url ?? PLACEHOLDER_IMAGE,
+        alt: product.images[0].alt ?? product.name,
+      }
+    }
+    // اگر product.image به صورت تکی وجود دارد (فقط برای امنیت)
+    if ((product as any).image) {
+      return {
+        url: (product as any).image.url ?? PLACEHOLDER_IMAGE,
+        alt: (product as any).image.alt ?? product.name,
+      }
+    }
+    return { url: PLACEHOLDER_IMAGE, alt: product.name }
+  }
+
   return (
     <div className="relative">
       {/* هدر */}
@@ -135,43 +154,46 @@ export function FeaturedProductsCarousel({
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseUp}
         >
-          {products.map((product) => (
-            <Link
-              key={product.id}
-              href={`/${product.slug}`}
-              className="product-card group relative min-w-[160px] max-w-[200px] flex-1 shrink-0 rounded-xl bg-white border border-neutral-100 hover:shadow-lg transition-all duration-300 overflow-hidden"
-            >
-              <div className="relative aspect-square bg-neutral-100">
-                <Image
-                  src={product.image?.url ?? PLACEHOLDER_IMAGE}
-                  alt={product.image?.alt ?? product.name}
-                  fill
-                  className="object-cover transition-transform duration-300 group-hover:scale-105"
-                  sizes="(max-width: 640px) 40vw, 200px"
-                />
-                {product.compareAtPrice && (
-                  <span className="absolute top-2 right-2 bg-red-600 text-white text-xs font-bold px-2 py-0.5 rounded-full">
-                    تخفیف
-                  </span>
-                )}
-              </div>
-              <div className="p-3">
-                <h3 className="text-sm font-medium line-clamp-2 group-hover:text-primary transition-colors">
-                  {product.name}
-                </h3>
-                <div className="mt-1 flex items-center gap-2">
-                  <span className="text-base font-bold text-red-600">
-                    {product.price.toLocaleString()} تومان
-                  </span>
-                  {product.compareAtPrice && (
-                    <span className="text-xs text-neutral-400 line-through">
-                      {product.compareAtPrice.toLocaleString()}
+          {products.map((product) => {
+            const img = getProductImage(product)
+            return (
+              <Link
+                key={product.id}
+                href={`/${product.slug}`}
+                className="product-card group relative min-w-[160px] max-w-[200px] flex-1 shrink-0 rounded-xl bg-white border border-neutral-100 hover:shadow-lg transition-all duration-300 overflow-hidden"
+              >
+                <div className="relative aspect-square bg-neutral-100">
+                  <Image
+                    src={img.url}
+                    alt={img.alt}
+                    fill
+                    className="object-cover transition-transform duration-300 group-hover:scale-105"
+                    sizes="(max-width: 640px) 40vw, 200px"
+                  />
+                  {(product as any).compareAtPrice && (
+                    <span className="absolute top-2 right-2 bg-red-600 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                      تخفیف
                     </span>
                   )}
                 </div>
-              </div>
-            </Link>
-          ))}
+                <div className="p-3">
+                  <h3 className="text-sm font-medium line-clamp-2 group-hover:text-primary transition-colors">
+                    {product.name}
+                  </h3>
+                  <div className="mt-1 flex items-center gap-2">
+                    <span className="text-base font-bold text-red-600">
+                      {product.price?.toLocaleString() ?? "۰"} تومان
+                    </span>
+                    {(product as any).compareAtPrice && (
+                      <span className="text-xs text-neutral-400 line-through">
+                        {(product as any).compareAtPrice.toLocaleString()}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </Link>
+            )
+          })}
         </div>
       </div>
     </div>
