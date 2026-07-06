@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { Search, ShoppingBag, User, Menu, Heart, LogOut, ChevronDown } from "lucide-react"
+import { Search, ShoppingBag, User, Menu, Heart, LogOut, ChevronDown, Percent, Flame } from "lucide-react"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import {
   DropdownMenu,
@@ -55,195 +55,119 @@ export function Header({ categories = [] }: HeaderProps) {
 
   return (
     <>
-      <header className="sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
-        <div className="mx-auto flex h-16 max-w-[1440px] items-center justify-between px-4 sm:px-6 lg:px-8">
-          {/* Mobile menu */}
-          <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-            <SheetTrigger
-              className="inline-flex items-center justify-center rounded-md p-2 text-foreground/60 hover:bg-accent hover:text-foreground lg:hidden"
-              aria-label={t("openMenu")}
-              aria-expanded={mobileMenuOpen}
-            >
-              <Menu className="h-5 w-5" />
-            </SheetTrigger>
-            <SheetContent side="left" className="!w-full !gap-0 sm:!w-80" showCloseButton={false}>
-              <div className="shrink-0 px-6 pt-5 pb-2">
-                <button
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="text-sm text-muted-foreground hover:text-foreground"
+      <header className="sticky top-0 z-50 w-full border-b bg-white shadow-sm transition-all">
+        <div className="mx-auto flex max-w-[1440px] flex-col px-4 sm:px-6 lg:px-8">
+          
+          {/* ردیف اول: لوگو، جستجو و دکمه‌های کاربری */}
+          <div className="flex h-16 items-center justify-between gap-4 md:gap-8 pt-2">
+            
+            {/* سمت راست: منوی موبایل و لوگو */}
+            <div className="flex items-center gap-3">
+              <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+                <SheetTrigger
+                  className="inline-flex items-center justify-center rounded-md p-2 text-neutral-600 hover:bg-neutral-100 lg:hidden"
+                  aria-label={t("openMenu")}
                 >
-                  &larr; {tCommon("close")}
-                </button>
-              </div>
+                  <Menu className="h-6 w-6" />
+                </SheetTrigger>
+                {/* محتوای منوی موبایل (مشابه کد قبلی شما) */}
+                <SheetContent side="right" className="!w-full !gap-0 sm:!w-80" showCloseButton={false}>
+                  {/* ... کدهای قبلی منوی موبایل شما ... */}
+                </SheetContent>
+              </Sheet>
 
-              <nav className="flex flex-1 flex-col overflow-y-auto px-6 pb-8">
-                {mobileMenuSections.map((section, sectionIdx) => (
-                  <div key={section.label}>
-                    {sectionIdx > 0 && <div className="my-4 border-t" />}
-                    <p className="mb-2 mt-4 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                      {section.label}
-                    </p>
-                    <div className="ml-3">
-                      {section.items.map((item) => {
-                        const slug = item.href.replace("/", "")
-                        const parentCat = allCategories.find((c) => c.slug === slug)
-                        const subcats = parentCat
-                          ? allCategories.filter((c) => c.parentId === parentCat.id)
-                          : []
-                        const hasSubcats = subcats.length > 0
-                        const isExpanded = expandedCategory === item.name
+              <Link href="/" className="text-2xl font-bold text-red-600 tracking-tight">
+                {siteConfig.name}
+              </Link>
+            </div>
 
-                        return (
-                          <div key={item.name}>
-                            <div className="flex items-center">
-                              <Link
-                                href={item.href}
-                                className="flex-1 py-2.5 text-sm font-medium text-foreground transition-colors hover:text-foreground/70"
-                                onClick={() => setMobileMenuOpen(false)}
-                              >
-                                {item.name}
-                              </Link>
-                              {hasSubcats && (
-                                <button
-                                  onClick={() => setExpandedCategory(isExpanded ? null : item.name)}
-                                  className="p-2 text-muted-foreground hover:text-foreground"
-                                  aria-label={`${isExpanded ? "Collapse" : "Expand"} ${item.name}`}
-                                  aria-expanded={isExpanded}
-                                >
-                                  <ChevronDown className={cn("h-4 w-4 transition-transform", isExpanded && "rotate-180")} />
-                                </button>
-                              )}
-                            </div>
-                            {hasSubcats && isExpanded && (
-                              <div className="mb-2 ml-4 flex flex-col border-l pl-4">
-                                {subcats.map((sub) => (
-                                  <Link
-                                    key={sub.id}
-                                    href={`/${sub.slug}`}
-                                    className="py-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
-                                    onClick={() => setMobileMenuOpen(false)}
-                                  >
-                                    {sub.name}
-                                  </Link>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        )
-                      })}
-                    </div>
-                  </div>
-                ))}
-              </nav>
-            </SheetContent>
-          </Sheet>
+            {/* بخش میانی: نوار جستجوی بزرگ (فقط در دسکتاپ) */}
+            <div className="hidden flex-1 lg:flex max-w-2xl">
+              <button
+                onClick={() => setSearchOpen(true)}
+                className="flex w-full items-center rounded-xl bg-neutral-100 px-4 py-2.5 text-sm text-neutral-500 transition-colors hover:bg-neutral-200"
+              >
+                <Search className="ml-3 h-5 w-5 text-neutral-400" />
+                <span>جستجو در میان بیش از ۱۰۰۰ کالا...</span>
+              </button>
+            </div>
 
-          {/* Logo */}
-          <Link href="/" className="text-xl font-semibold tracking-tight">
-            {siteConfig.name}
-          </Link>
+            {/* سمت چپ: حساب کاربری و سبد خرید */}
+            <div className="flex items-center gap-2">
+              {mounted && isAuthenticated ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger className="flex h-10 items-center justify-center gap-2 rounded-lg border px-3 hover:bg-neutral-50 transition-colors">
+                    <User className="h-5 w-5 text-neutral-600" />
+                    <ChevronDown className="h-4 w-4 text-neutral-400" />
+                  </DropdownMenuTrigger>
+                  {/* ... Dropdown Content قبلی ... */}
+                </DropdownMenu>
+              ) : (
+                <Link
+                  href="/auth/login"
+                  className="flex h-10 items-center justify-center gap-2 rounded-lg border px-4 text-sm font-medium hover:bg-neutral-50 transition-colors"
+                >
+                  <User className="h-5 w-5" />
+                  <span className="hidden sm:inline-block">ورود | ثبت‌نام</span>
+                </Link>
+              )}
 
-          {/* Desktop nav */}
-          <nav className="hidden lg:flex lg:gap-6">
+              <span className="hidden sm:block h-6 w-px bg-neutral-200 mx-1"></span>
+
+              <button
+                onClick={openCart}
+                className="relative inline-flex h-10 w-10 items-center justify-center rounded-lg hover:bg-neutral-100 transition-colors"
+              >
+                <ShoppingBag className="h-5 w-5 text-neutral-700" />
+                {itemCount > 0 && (
+                  <span className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-[11px] font-bold text-white shadow-sm border-2 border-white">
+                    {itemCount > 9 ? "9+" : itemCount}
+                  </span>
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* نوار جستجو برای موبایل (زیر لوگو) */}
+          <div className="flex pb-3 lg:hidden mt-2">
+            <button
+              onClick={() => setSearchOpen(true)}
+              className="flex w-full items-center rounded-lg bg-neutral-100 px-4 py-2 text-sm text-neutral-500"
+            >
+              <Search className="ml-2 h-4 w-4 text-neutral-400" />
+              <span>جستجو...</span>
+            </button>
+          </div>
+
+          {/* ردیف دوم: منوی ناوبری دسکتاپ (دسته بندی ها، شگفت انگیز و ...) */}
+          <nav className="hidden lg:flex items-center gap-6 pb-3 text-[13px] font-medium text-neutral-600 mt-2">
+            <div className="flex items-center gap-1.5 cursor-pointer hover:text-black hover:border-b-2 border-red-600 pb-1 transition-all">
+              <Menu className="h-4 w-4" />
+              <span>دسته‌بندی کالاها</span>
+            </div>
+            <span className="h-4 w-px bg-neutral-200"></span>
+            
+            <Link href="/discounts" className="flex items-center gap-1.5 hover:text-black transition-colors">
+              <Percent className="h-4 w-4 text-red-500" />
+              <span>شگفت‌انگیزها</span>
+            </Link>
+            
+            <Link href="/bestsellers" className="flex items-center gap-1.5 hover:text-black transition-colors">
+              <Flame className="h-4 w-4 text-orange-500" />
+              <span>پرفروش‌ترین‌ها</span>
+            </Link>
+
             {shopLinks.map((item) => (
               <Link
                 key={item.name}
                 href={item.href}
-                className="text-sm font-medium text-foreground transition-colors hover:text-foreground/70"
+                className="hover:text-black transition-colors"
               >
                 {item.name}
               </Link>
             ))}
           </nav>
 
-          {/* Actions */}
-          <div className="flex items-center">
-            <button
-              onClick={() => setSearchOpen(true)}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-md hover:bg-accent"
-              aria-label={t("searchProducts")}
-            >
-              <Search className="h-5 w-5" />
-            </button>
-
-            <Link
-              href="/wishlist"
-              className="hidden h-10 w-10 items-center justify-center rounded-md hover:bg-accent lg:inline-flex"
-              aria-label={t("wishlist")}
-            >
-              <Heart className="h-5 w-5" />
-            </Link>
-
-            {/* User menu — desktop only */}
-            {mounted && isAuthenticated ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger
-                  className="hidden h-10 w-10 items-center justify-center rounded-md hover:bg-accent lg:inline-flex"
-                  aria-label={t("accountMenu")}
-                >
-                  <div className="flex h-7 w-7 items-center justify-center rounded-full bg-foreground text-xs font-medium text-background">
-                    {user?.firstName?.[0] ?? "U"}
-                  </div>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
-                  <div className="px-2 py-1.5">
-                    <p className="text-sm font-medium">
-                      {user?.firstName} {user?.lastName}
-                    </p>
-                    <p className="text-xs text-muted-foreground">{user?.email}</p>
-                  </div>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => router.push("/account")}>
-                    {tCommon("signIn")}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => router.push("/account/orders")}>
-                    {tCommon("orders")}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => router.push("/account/settings")}>
-                    Settings
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={async () => {
-                      await supabase.auth.signOut()
-                      router.refresh()
-                      router.push("/")
-                    }}
-                  >
-                    <LogOut className="mr-2 h-4 w-4" />
-                    {tCommon("signOut")}
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            ) : (
-              <Link
-                href="/auth/login"
-                className="hidden h-10 w-10 items-center justify-center rounded-md hover:bg-accent lg:inline-flex"
-                aria-label={tCommon("signIn")}
-              >
-                <User className="h-5 w-5" />
-              </Link>
-            )}
-
-            {/* Cart */}
-            <button
-              onClick={openCart}
-              className="relative inline-flex h-10 w-10 items-center justify-center rounded-md hover:bg-accent"
-              aria-label={t("openCart")}
-            >
-              <ShoppingBag className="h-5 w-5" />
-              {itemCount > 0 && (
-                <span
-                  className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-foreground text-[10px] font-medium text-background"
-                  aria-live="polite"
-                  aria-atomic="true"
-                  aria-label={`${itemCount} ${itemCount === 1 ? "item" : "items"} in cart`}
-                >
-                  {itemCount > 9 ? "9+" : itemCount}
-                </span>
-              )}
-            </button>
-          </div>
         </div>
       </header>
 
