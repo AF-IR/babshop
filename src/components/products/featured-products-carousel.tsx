@@ -87,21 +87,41 @@ export function FeaturedProductsCarousel({
 
   // تابع کمکی برای دریافت اولین تصویر محصول
   const getProductImage = (product: Product) => {
+    const p = product as any
     // اگر product.images آرایه است و اولین عنصر را دارد
-    if (product.images && product.images.length > 0) {
+    if (p.images && p.images.length > 0) {
       return {
-        url: product.images[0].url ?? PLACEHOLDER_IMAGE,
-        alt: product.images[0].alt ?? product.name,
+        url: p.images[0].url ?? PLACEHOLDER_IMAGE,
+        alt: p.images[0].alt ?? product.name,
       }
     }
-    // اگر product.image به صورت تکی وجود دارد (فقط برای امنیت)
-    if ((product as any).image) {
+    // اگر product.image به صورت تکی وجود دارد
+    if (p.image) {
       return {
-        url: (product as any).image.url ?? PLACEHOLDER_IMAGE,
-        alt: (product as any).image.alt ?? product.name,
+        url: p.image.url ?? PLACEHOLDER_IMAGE,
+        alt: p.image.alt ?? product.name,
       }
     }
     return { url: PLACEHOLDER_IMAGE, alt: product.name }
+  }
+
+  // دریافت قیمت محصول (با fallback)
+  const getProductPrice = (product: Product) => {
+    const p = product as any
+    // اولویت با price
+    if (p.price !== undefined && p.price !== null) return p.price
+    // اگر قیمت در variants باشد
+    if (p.variants && p.variants.length > 0 && p.variants[0].price !== undefined) {
+      return p.variants[0].price
+    }
+    return 0
+  }
+
+  const getComparePrice = (product: Product) => {
+    const p = product as any
+    if (p.compareAtPrice !== undefined && p.compareAtPrice !== null) return p.compareAtPrice
+    if (p.compare_at_price !== undefined && p.compare_at_price !== null) return p.compare_at_price
+    return null
   }
 
   return (
@@ -156,6 +176,8 @@ export function FeaturedProductsCarousel({
         >
           {products.map((product) => {
             const img = getProductImage(product)
+            const price = getProductPrice(product)
+            const comparePrice = getComparePrice(product)
             return (
               <Link
                 key={product.id}
@@ -170,7 +192,7 @@ export function FeaturedProductsCarousel({
                     className="object-cover transition-transform duration-300 group-hover:scale-105"
                     sizes="(max-width: 640px) 40vw, 200px"
                   />
-                  {(product as any).compareAtPrice && (
+                  {comparePrice && (
                     <span className="absolute top-2 right-2 bg-red-600 text-white text-xs font-bold px-2 py-0.5 rounded-full">
                       تخفیف
                     </span>
@@ -182,11 +204,11 @@ export function FeaturedProductsCarousel({
                   </h3>
                   <div className="mt-1 flex items-center gap-2">
                     <span className="text-base font-bold text-red-600">
-                      {product.price?.toLocaleString() ?? "۰"} تومان
+                      {price.toLocaleString()} تومان
                     </span>
-                    {(product as any).compareAtPrice && (
+                    {comparePrice && (
                       <span className="text-xs text-neutral-400 line-through">
-                        {(product as any).compareAtPrice.toLocaleString()}
+                        {comparePrice.toLocaleString()}
                       </span>
                     )}
                   </div>
