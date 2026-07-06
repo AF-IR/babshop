@@ -3,7 +3,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { createClient } from '@supabase/supabase-js'
 import { siteConfig } from "@/lib/config"
-import { ProductGrid } from "@/components/products/product-grid"
+import { FeaturedProductsCarousel } from "@/components/products/featured-products-carousel" // ← import جدید
 import { NewsletterForm } from "@/components/layout/newsletter-form"
 import { PLACEHOLDER_IMAGE } from "@/lib/constants"
 import { productRepository, categoryRepository } from "@/lib/repositories"
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
 
 export default async function HomePage() {
   const categories = await categoryRepository.list()
-  const featuredProducts = await productRepository.getFeatured(4)
+  const featuredProducts = await productRepository.getFeatured(8) // ← تعداد را به ۸ افزایش دادم تا کاروسل پرتر شود
   
   // دریافت بنرهای فعال از سوپابیس
   const { data: banners } = await supabase
@@ -71,22 +71,13 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Featured Products */}
+      {/* Featured Products - حالا به صورت کاروسل */}
       <section className="mx-auto w-full max-w-[1440px] px-4 py-16 sm:px-6 lg:px-8 bg-neutral-50 rounded-3xl mb-16">
-        <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold tracking-tight">
-            محصولات ویژه
-          </h2>
-          <Link
-            href="/shop"
-            className="text-sm font-medium text-muted-foreground hover:text-foreground"
-          >
-            مشاهده همه
-          </Link>
-        </div>
-        <div className="mt-8">
-          <ProductGrid products={featuredProducts} />
-        </div>
+        <FeaturedProductsCarousel 
+          products={featuredProducts} 
+          title="محصولات ویژه" 
+          viewAllLink="/shop" 
+        />
       </section>
 
       {/* Newsletter CTA */}
