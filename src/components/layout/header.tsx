@@ -100,7 +100,38 @@ export function Header({ categories = [] }: HeaderProps) {
                     <User className="h-5 w-5 text-neutral-600" />
                     <ChevronDown className="h-4 w-4 text-neutral-400" />
                   </DropdownMenuTrigger>
-                  {/* ... Dropdown Content قبلی ... */}
+                  <DropdownMenuContent align="end" className="w-48 bg-white shadow-lg rounded-xl border-neutral-100 mt-2">
+                    <div className="px-3 py-2 border-b border-neutral-100">
+                      <p className="text-sm font-bold text-neutral-800">
+                        {user?.firstName} {user?.lastName}
+                      </p>
+                      <p className="text-xs text-neutral-500 mt-1 truncate">{user?.email}</p>
+                    </div>
+                    <div className="p-1">
+                      <DropdownMenuItem onClick={() => router.push("/account")} className="cursor-pointer rounded-lg hover:bg-neutral-50">
+                        پروفایل کاربری
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => router.push("/account/orders")} className="cursor-pointer rounded-lg hover:bg-neutral-50">
+                        سفارش‌های من
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => router.push("/account/settings")} className="cursor-pointer rounded-lg hover:bg-neutral-50">
+                        تنظیمات
+                      </DropdownMenuItem>
+                    </div>
+                    <div className="border-t border-neutral-100 p-1">
+                      <DropdownMenuItem
+                        className="cursor-pointer text-red-600 rounded-lg hover:bg-red-50 focus:text-red-700"
+                        onClick={async () => {
+                          await supabase.auth.signOut()
+                          router.refresh()
+                          router.push("/")
+                        }}
+                      >
+                        <LogOut className="mr-2 h-4 w-4" />
+                        خروج از حساب
+                      </DropdownMenuItem>
+                    </div>
+                  </DropdownMenuContent>
                 </DropdownMenu>
               ) : (
                 <Link
