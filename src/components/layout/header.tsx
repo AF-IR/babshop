@@ -31,7 +31,7 @@ export function Header({ categories = [] }: HeaderProps) {
   const getItemCount = useCartStore((s) => s.getItemCount)
   const { user, isAuthenticated } = useUser()
   const router = useRouter()
-  const pathname = usePathname() // ← برای تشخیص تغییر مسیر
+  const pathname = usePathname()
   const [mounted, setMounted] = useState(false)
   useEffect(() => setMounted(true), [])
   const itemCount = mounted ? getItemCount() : 0
@@ -65,6 +65,9 @@ export function Header({ categories = [] }: HeaderProps) {
     { name: "پرفروش‌ترین‌ها", href: "/bestsellers", icon: <Flame className="h-4 w-4 text-orange-500" /> },
     { name: "تخفیف‌های ویژه", href: "/specials", icon: <Gift className="h-4 w-4 text-green-500" /> },
   ]
+
+  // حداکثر ۵ دسته‌بندی برای نمایش در نوار ناوبری
+  const topCategories = categories.slice(0, 6)
 
   return (
     <>
@@ -100,27 +103,41 @@ export function Header({ categories = [] }: HeaderProps) {
                       </button>
                     </div>
 
-                    {/* محتوای منو (همانند قبل) */}
+                    {/* محتوای منو */}
                     <div className="flex-1 overflow-y-auto px-4 py-3">
-                      {/* بخش اصلی: دسته‌بندی */}
+                      
+                      {/* ===== بخش دسته‌بندی کالاها (از دیتابیس) ===== */}
                       <div className="mb-6">
                         <h3 className="mb-2 text-sm font-bold text-neutral-500">دسته‌بندی کالاها</h3>
                         <ul className="space-y-1">
-                          {shopLinks.map((item) => (
-                            <li key={item.href}>
-                              <Link
-                                href={item.href}
-                                onClick={() => setMobileMenuOpen(false)}
-                                className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-neutral-700 hover:bg-red-50 hover:text-red-600 transition-colors"
-                              >
-                                {item.name}
-                              </Link>
-                            </li>
-                          ))}
+                          {categories.length > 0 ? (
+                            categories.map((cat) => (
+                              <li key={cat.id}>
+                                <Link
+                                  href={`/category/${cat.slug}`}
+                                  onClick={() => setMobileMenuOpen(false)}
+                                  className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-neutral-700 hover:bg-red-50 hover:text-red-600 transition-colors"
+                                >
+                                  {cat.name}
+                                </Link>
+                              </li>
+                            ))
+                          ) : (
+                            <li className="px-3 py-2 text-sm text-neutral-500">دسته‌بندی موجود نیست</li>
+                          )}
+                          <li>
+                            <Link
+                              href="/shop"
+                              onClick={() => setMobileMenuOpen(false)}
+                              className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
+                            >
+                              مشاهده همه دسته‌ها
+                            </Link>
+                          </li>
                         </ul>
                       </div>
 
-                      {/* بخش ویژه */}
+                      {/* بخش ویژه (ثابت) */}
                       <div className="mb-6">
                         <h3 className="mb-2 text-sm font-bold text-neutral-500">پیشنهادات ویژه</h3>
                         <ul className="space-y-1">
@@ -139,7 +156,7 @@ export function Header({ categories = [] }: HeaderProps) {
                         </ul>
                       </div>
 
-                      {/* بخش خدمات مشتریان */}
+                      {/* بخش خدمات مشتریان (ثابت) */}
                       <div className="mb-6">
                         <h3 className="mb-2 text-sm font-bold text-neutral-500">خدمات مشتریان</h3>
                         <ul className="space-y-1">
@@ -293,10 +310,11 @@ export function Header({ categories = [] }: HeaderProps) {
             </button>
           </div>
 
-          {/* ===== منوی ناوبری دسکتاپ ===== */}
-          <nav className="hidden lg:flex items-center gap-6 pb-3 text-sm font-medium text-neutral-600 mt-1">
-            {/* دسته‌بندی کالاها با منوی کشویی */}
-            <div className="group relative">
+          {/* ===== منوی ناوبری دسکتاپ (با دسته‌بندی‌ها) ===== */}
+          <nav className="hidden lg:flex items-center gap-4 pb-3 text-sm font-medium text-neutral-600 mt-1 overflow-x-auto scrollbar-hide">
+            
+            {/* دکمه دسته‌بندی کشویی */}
+            <div className="group relative shrink-0">
               <button className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 hover:bg-neutral-100 transition-colors">
                 <Menu className="h-4 w-4" />
                 <span>دسته‌بندی کالاها</span>
@@ -318,25 +336,47 @@ export function Header({ categories = [] }: HeaderProps) {
               </div>
             </div>
 
-            <span className="h-5 w-px bg-neutral-300"></span>
+            {/* ===== نمایش افقی دسته‌بندی‌های اصلی (مثل دیجی‌کالا) ===== */}
+            {topCategories.map((cat) => (
+              <Link
+                key={cat.id}
+                href={`/category/${cat.slug}`}
+                className="shrink-0 hover:text-red-600 transition-colors px-1 py-1 border-b-2 border-transparent hover:border-red-500"
+              >
+                {cat.name}
+              </Link>
+            ))}
+
+            {/* اگر دسته‌بندی زیاد باشد، یک «...» برای مشاهده همه */}
+            {categories.length > 6 && (
+              <Link
+                href="/shop"
+                className="shrink-0 text-neutral-400 hover:text-red-600 transition-colors"
+              >
+                ...
+              </Link>
+            )}
+
+            <span className="h-5 w-px bg-neutral-300 shrink-0"></span>
 
             {/* آیتم‌های ویژه */}
             {specialItems.map((item) => (
-              <Link key={item.href} href={item.href} className="flex items-center gap-1.5 hover:text-red-600 transition-colors">
+              <Link key={item.href} href={item.href} className="flex items-center gap-1.5 shrink-0 hover:text-red-600 transition-colors">
                 {item.icon}
                 <span>{item.name}</span>
               </Link>
             ))}
 
-            <span className="h-5 w-px bg-neutral-300"></span>
+            <span className="h-5 w-px bg-neutral-300 shrink-0"></span>
 
             {/* لینک‌های فروشگاه (به جز خانه) */}
             {shopLinks.filter(link => link.name !== "خانه").map((item) => (
-              <Link key={item.href} href={item.href} className="hover:text-red-600 transition-colors">
+              <Link key={item.href} href={item.href} className="shrink-0 hover:text-red-600 transition-colors">
                 {item.name}
               </Link>
             ))}
           </nav>
+
         </div>
       </header>
 
