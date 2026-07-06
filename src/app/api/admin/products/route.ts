@@ -1,61 +1,65 @@
+import { NextRequest } from "next/server"
+
 import {
   apiException,
   apiSuccess,
-  supabaseAdmin,
+  requireAdmin,
 } from "@/lib/admin"
 
-export async function GET(request: Request) {
+import {
+  getProducts,
+} from "@/lib/admin/products"
+
+export async function GET(
+  request: NextRequest
+) {
   try {
-    //--------------------------------------------------
-    // Query Params
-    //--------------------------------------------------
 
-    const { searchParams } = new URL(request.url)
+    await requireAdmin(request)
 
-    const page = Number(searchParams.get("page") ?? 1)
-    const limit = Number(searchParams.get("limit") ?? 20)
-    const search = searchParams.get("search") ?? ""
+    const { searchParams } =
+      new URL(request.url)
 
-    const from = (page - 1) * limit
-    const to = from + limit - 1
+    const page = Number(
+      searchParams.get("page") ?? "1"
+    )
 
-    //--------------------------------------------------
-    // Query
-    //--------------------------------------------------
+    const limit = Number(
+      searchParams.get("limit") ?? "20"
+    )
 
-    let query = supabaseAdmin
-      .from("products")
-      .select("*", {
-        count: "exact",
-      })
-      .order("created_at", {
-        ascending: false,
-      })
+    const search =
+      searchParams.get("search") ?? undefined
 
-    if (search) {
-      query = query.ilike("title", `%${search}%`)
-    }
+    const category =
+      searchParams.get("category") ?? undefined
 
-    const {
-      data,
-      count,
-      error,
-    } = await query.range(from, to)
+    const published =
+      searchParams.get("published")
 
-    if (error) throw error
+    const result =
+      await getProducts({
 
-    //--------------------------------------------------
-
-    return apiSuccess({
-      items: data,
-      pagination: {
         page,
+
         limit,
-        total: count ?? 0,
-        totalPages: Math.ceil((count ?? 0) / limit),
-      },
-    })
+
+        search,
+
+        category,
+
+        published:
+          published === null
+            ? undefined
+            : published === "true",
+
+      })
+
+    return apiSuccess(result)
+
   } catch (error) {
+
     return apiException(error)
+
   }
 }
