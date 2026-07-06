@@ -3,9 +3,9 @@
 import Link from "next/link"
 import { Separator } from "@/components/ui/separator"
 import { siteConfig } from "@/lib/config"
-import { Mail, MapPin, Phone, Send, Instagram, Twitter, Youtube, Facebook, Linkedin } from "lucide-react"
+import { Mail, MapPin, Phone, Send, Linkedin, Facebook, Instagram, Youtube, X } from "lucide-react"
 
-// آیکون‌های شبکه‌های اجتماعی (با استفاده از lucide-react)
+// آیکون‌های شبکه‌های اجتماعی
 const SocialIcon = ({ icon: Icon, href, label }: { icon: any; href: string; label: string }) => (
   <a
     href={href}
@@ -178,7 +178,7 @@ export function Footer() {
           {/* شبکه‌های اجتماعی */}
           <div className="flex items-center gap-3">
             <SocialIcon icon={Instagram} href="#" label="اینستاگرام" />
-            <SocialIcon icon={Twitter} href="#" label="توییتر" />
+            <SocialIcon icon={X} href="#" label="توییتر (X)" />
             <SocialIcon icon={Facebook} href="#" label="فیسبوک" />
             <SocialIcon icon={Youtube} href="#" label="یوتیوب" />
             <SocialIcon icon={Linkedin} href="#" label="لینکدین" />
