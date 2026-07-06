@@ -105,6 +105,8 @@ export default function CheckoutPage() {
       })
 
       const data = await response.json()
+      console.log("STATUS:", response.status)
+      console.log("PAYMENT RESPONSE:", data)
 
       if (!response.ok) {
         throw new Error(data.error || "خطا در ایجاد پرداخت")
