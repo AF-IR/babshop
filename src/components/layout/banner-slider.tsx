@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { ChevronLeft, ChevronRight } from "lucide-react"
+import { ChevronLeft, ChevronRight, ArrowUpRight } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface Banner {
@@ -20,7 +20,6 @@ export function BannerSlider({ banners }: { banners: Banner[] }) {
   const [touchStart, setTouchStart] = useState(0)
   const [isDragging, setIsDragging] = useState(false)
   const dragStartRef = useRef<{ x: number; y: number } | null>(null)
-  const linkRef = useRef<HTMLAnchorElement>(null)
 
   const nextSlide = useCallback(() => {
     setCurrent((prev) => (prev === banners.length - 1 ? 0 : prev + 1))
@@ -37,7 +36,7 @@ export function BannerSlider({ banners }: { banners: Banner[] }) {
     return () => clearInterval(timer)
   }, [banners, isHovered, nextSlide])
 
-  // تشخیص کلیک/درگ روی بنر (ماوس)
+  // تشخیص کلیک/درگ (ماوس)
   const handleMouseDown = (e: React.MouseEvent) => {
     dragStartRef.current = { x: e.clientX, y: e.clientY }
     setIsDragging(false)
@@ -57,7 +56,6 @@ export function BannerSlider({ banners }: { banners: Banner[] }) {
     const dx = e.clientX - dragStartRef.current.x
     const dy = e.clientY - dragStartRef.current.y
     const distance = Math.sqrt(dx * dx + dy * dy)
-
     if (distance > 10) {
       setIsDragging(true)
     } else {
@@ -122,7 +120,6 @@ export function BannerSlider({ banners }: { banners: Banner[] }) {
           <Link
             key={banner.id}
             href={banner.link_url || "/shop"}
-            ref={isActive ? linkRef : undefined}
             onClick={handleClick}
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
@@ -143,10 +140,10 @@ export function BannerSlider({ banners }: { banners: Banner[] }) {
               sizes="(max-width: 768px) 100vw, 1440px"
             />
 
-            {/* گرادیانت ملایم برای خوانایی متن - فقط در پایین */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent pointer-events-none" />
+            {/* گرادیانت حذف شد - فقط یک لایه بسیار ملایم برای بهبود خوانایی (اختیاری) */}
+            {/* در صورت نیاز می‌توان کاملاً حذف کرد */}
 
-            {/* محتوای متنی با انیمیشن */}
+            {/* محتوای متنی با انیمیشن و سایه قوی */}
             <div
               className={cn(
                 "absolute inset-0 flex flex-col items-center justify-end pb-8 sm:pb-12 lg:pb-16 px-6 text-white transition-all duration-700 ease-out pointer-events-none",
@@ -154,18 +151,27 @@ export function BannerSlider({ banners }: { banners: Banner[] }) {
               )}
             >
               {banner.title && (
-                <h2 className="text-2xl font-extrabold tracking-tight sm:text-3xl lg:text-5xl drop-shadow-lg text-center max-w-3xl">
+                <h2 className="text-2xl font-extrabold tracking-tight sm:text-3xl lg:text-5xl text-center max-w-3xl [text-shadow:0_4px_12px_rgba(0,0,0,0.8),0_2px_4px_rgba(0,0,0,0.6)]">
                   {banner.title}
                 </h2>
               )}
               {banner.subtitle && (
-                <p className="mt-2 text-sm sm:text-base lg:text-lg font-medium text-white/90 drop-shadow max-w-2xl text-center">
+                <p className="mt-2 text-sm sm:text-base lg:text-lg font-medium text-white text-center max-w-2xl [text-shadow:0_2px_8px_rgba(0,0,0,0.8)]">
                   {banner.subtitle}
                 </p>
               )}
-              {/* نشانگر کوچک برای کلیک */}
-              <span className="mt-4 inline-block rounded-full border border-white/40 bg-white/10 px-4 py-1.5 text-xs font-medium backdrop-blur-sm transition-all hover:bg-white/20 pointer-events-auto">
+            </div>
+
+            {/* دکمه مشاهده و خرید - گوشه پایین راست، کوچک و شفاف */}
+            <div
+              className={cn(
+                "absolute bottom-4 right-4 z-20 transition-all duration-500",
+                isActive ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+              )}
+            >
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-white/30 bg-white/10 px-3 py-1.5 text-xs font-medium text-white backdrop-blur-sm transition-all hover:bg-white/25 hover:scale-105 pointer-events-auto">
                 مشاهده و خرید
+                <ArrowUpRight className="h-3.5 w-3.5" />
               </span>
             </div>
           </Link>
