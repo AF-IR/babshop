@@ -39,4 +39,5 @@ export const siteConfig = {
   copyrightYear: new Date().getFullYear(),
 } as const
 
+
 export type SiteConfig = typeof siteConfig
