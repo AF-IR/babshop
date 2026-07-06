@@ -1,46 +1,45 @@
+import { NextRequest } from "next/server"
+
 import {
   apiException,
   apiSuccess,
+  requireAdmin,
 } from "@/lib/admin"
-
-import { requireAdmin } from "@/lib/admin"
 
 import { getOrders } from "@/lib/admin/orders"
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   try {
+    //--------------------------------------------------
+    // احراز هویت ادمین
+    //--------------------------------------------------
 
-    await requireAdmin()
+    await requireAdmin(request)
 
-    const { searchParams } =
-      new URL(request.url)
+    //--------------------------------------------------
+    // پارامترها
+    //--------------------------------------------------
 
-    const page =
-      Number(searchParams.get("page") ?? 1)
+    const { searchParams } = new URL(request.url)
 
-    const pageSize =
-      Number(searchParams.get("pageSize") ?? 20)
+    const page = Number(searchParams.get("page") ?? "1")
 
-    const status =
-      searchParams.get("status") ?? undefined
+    const limit = Number(searchParams.get("limit") ?? "20")
 
-    const paymentStatus =
-      searchParams.get("paymentStatus") ?? undefined
+    const search = searchParams.get("search") ?? ""
 
-    const search =
-      searchParams.get("search") ?? undefined
+    const status = searchParams.get("status") ?? ""
 
-    const orders =
-      await getOrders({
-        page,
-        pageSize,
-        status,
-        paymentStatus,
-        search,
-      })
+    //--------------------------------------------------
 
-    return apiSuccess(orders)
+    const result = await getOrders({
+      page,
+      limit,
+      search,
+      status,
+    })
 
+    return apiSuccess(result)
   } catch (error) {
     return apiException(error)
   }
