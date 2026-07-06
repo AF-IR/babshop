@@ -12,13 +12,13 @@ export const siteConfig = {
 
   contact: {
     email: "support@babshop.ir",
-    phone: "",
+    phone: "00989010040035",
     address: {
-      street: "",
+      street: "مطهری",
       suite: "",
-      city: "",
-      state: "",
-      zip: "",
+      city: "اصفهان",
+      state: "کوچه ویلا شرقی پلاک ۱",
+      zip: "8185241457",
     },
   },
 
@@ -33,7 +33,7 @@ export const siteConfig = {
   freeShippingThreshold: 1000000,
   taxRate: 0,
 
-  currency: "IRR",
+  currency: "تومان",
   locale: "fa-IR",
 
   copyrightYear: new Date().getFullYear(),
