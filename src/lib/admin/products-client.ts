@@ -83,3 +83,72 @@ export async function deleteProduct(
   )
 
 }
+//--------------------------------------------------
+// دریافت یک محصول
+//--------------------------------------------------
+
+export async function getProduct(
+
+  id: string
+
+) {
+
+  return adminFetch(
+
+    `/api/admin/products/${id}`
+
+  )
+
+}
+
+//--------------------------------------------------
+// ویرایش
+//--------------------------------------------------
+
+export async function updateProduct(
+
+  id: string,
+
+  body: unknown
+
+) {
+
+  return adminFetch(
+
+    `/api/admin/products/${id}`,
+
+    {
+
+      method: "PUT",
+
+      body: JSON.stringify(body),
+
+    }
+
+  )
+
+}
+
+//--------------------------------------------------
+// حذف
+//--------------------------------------------------
+
+export async function deleteProduct(
+
+  id: string
+
+) {
+
+  return adminFetch(
+
+    `/api/admin/products/${id}`,
+
+    {
+
+      method: "DELETE",
+
+    }
+
+  )
+
+}
