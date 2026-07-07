@@ -1,22 +1,17 @@
-import ProductForm
-from "@/components/admin/product-form"
+"use client"
 
-export default function CreateProductPage(){
+import ProductForm from "@/components/admin/product-form"
 
-  return(
-
-    <div className="space-y-8">
+export default function CreateProductPage() {
+  return (
+    <div className="space-y-6">
 
       <h1 className="text-3xl font-bold">
-
         افزودن محصول
-
       </h1>
 
-      <ProductForm/>
+      <ProductForm />
 
     </div>
-
   )
-
 }
