@@ -5,35 +5,57 @@ import { supabase } from "@/lib/supabase"
 import type { User } from "@/types"
 
 export function useUser() {
-  const [user, setUser] = useState<User | null>(null)
-  const [loading, setLoading] = useState(true)
+
+  const [user, setUser] =
+    useState<User | null>(null)
+
+  const [loading, setLoading] =
+    useState(true)
+
+  const [accessToken, setAccessToken] =
+    useState<string | null>(null)
 
   async function loadUser() {
+
     const {
-      data: { user: sbUser },
-    } = await supabase.auth.getUser()
+      data: { session },
+    } = await supabase.auth.getSession()
+
+    const sbUser = session?.user ?? null
 
     if (!sbUser) {
+
       setUser(null)
+      setAccessToken(null)
       setLoading(false)
+
       return
     }
 
     setUser({
       id: sbUser.id,
       email: sbUser.email ?? "",
-      firstName: sbUser.user_metadata?.firstName ?? "",
-      lastName: sbUser.user_metadata?.lastName ?? "",
-      role: "customer",
+      firstName:
+        sbUser.user_metadata?.firstName ?? "",
+      lastName:
+        sbUser.user_metadata?.lastName ?? "",
+      role:
+        sbUser.user_metadata?.role ?? "customer",
       addresses: [],
       createdAt: sbUser.created_at,
-      updatedAt: sbUser.updated_at ?? sbUser.created_at,
+      updatedAt:
+        sbUser.updated_at ?? sbUser.created_at,
     })
+
+    setAccessToken(
+      session?.access_token ?? null
+    )
 
     setLoading(false)
   }
 
   useEffect(() => {
+
     loadUser()
 
     const {
@@ -43,12 +65,18 @@ export function useUser() {
     })
 
     return () => subscription.unsubscribe()
+
   }, [])
 
   return {
+
     user,
+
     loading,
+
     isAuthenticated: !!user,
+
     accessToken,
+
   }
 }
