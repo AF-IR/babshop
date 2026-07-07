@@ -108,22 +108,45 @@ export async function POST(
     ) {
       throw new Error("Stock is required.")
     }
-
     const product =
       await createProduct({
-
         title: body.title,
+
         slug: body.slug,
-        description: body.description,
-        image: body.image,
-        price: Number(body.price),
-        stock: Number(body.stock),
-        category: body.category,
+
+        description:
+          body.description,
+
+        body:
+          body.body,
+
+        image:
+          body.image,
+
+        price:
+          Number(body.price),
+
+        stock:
+          Number(body.stock),
+
+        category_id:
+          body.category_id,
+
+        brand_id:
+          body.brand_id,
+
+        featured:
+          body.featured,
+
         published:
-          body.published ?? true,
+          body.published,
 
+        weight:
+          Number(body.weight),
+
+        tags:
+          body.tags,
       })
-
     return apiSuccess(product, 201)
 
   } catch (error) {
