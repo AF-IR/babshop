@@ -1,37 +1,31 @@
 // ======================================================
 // src/lib/admin/products.ts
-// سرویس مدیریت محصولات
+// Product Repository (Admin)
 // ======================================================
 
-import { supabaseAdmin } from "@/lib/supabase-admin"
+import { supabaseAdmin } from "@/lib/admin"
 
-export interface AdminProductsFilters {
+export interface AdminProductFilters {
   page?: number
-  limit?: number
+  pageSize?: number
   search?: string
-  category?: string
   published?: boolean
+  category?: string
 }
 
 export async function getProducts(
-  filters: AdminProductsFilters = {}
+  filters: AdminProductFilters = {}
 ) {
   const page = filters.page ?? 1
-  const limit = filters.limit ?? 20
-
-  const from = (page - 1) * limit
-  const to = from + limit - 1
+  const pageSize = filters.pageSize ?? 20
 
   let query = supabaseAdmin
     .from("products")
     .select("*", {
       count: "exact",
     })
-    .order("created_at", {
-      ascending: false,
-    })
 
-  //------------------------------------------------
+  //---------------------------------------
 
   if (filters.search) {
     query = query.or(
@@ -39,26 +33,44 @@ export async function getProducts(
     )
   }
 
-  //------------------------------------------------
+  //---------------------------------------
 
-  if (filters.category) {
-    query = query.eq("category", filters.category)
-  }
-
-  //------------------------------------------------
-
-  if (filters.published !== undefined) {
+  if (
+    filters.published !== undefined
+  ) {
     query = query.eq(
       "published",
       filters.published
     )
   }
 
-  //------------------------------------------------
+  //---------------------------------------
 
-  query = query.range(from, to)
+  if (filters.category) {
+    query = query.eq(
+      "category",
+      filters.category
+    )
+  }
 
-  const { data, error, count } = await query
+  //---------------------------------------
+
+  query = query
+    .order("created_at", {
+      ascending: false,
+    })
+    .range(
+      (page - 1) * pageSize,
+      page * pageSize - 1
+    )
+
+  //---------------------------------------
+
+  const {
+    data,
+    error,
+    count,
+  } = await query
 
   if (error) throw error
 
@@ -66,7 +78,6 @@ export async function getProducts(
     items: data ?? [],
     total: count ?? 0,
     page,
-    limit,
-    totalPages: Math.ceil((count ?? 0) / limit),
+    pageSize,
   }
 }
