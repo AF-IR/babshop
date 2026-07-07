@@ -1,54 +1,98 @@
-// ======================================================
-// src/lib/admin/product.ts
-// عملیات روی یک محصول
-// ======================================================
+import { supabaseAdmin } from "@/lib/admin"
+import { CreateProductInput } from "./products"
 
-import { supabaseAdmin } from "@/lib/supabase-admin"
+//---------------------------------------------
+// دریافت یک محصول
+//---------------------------------------------
 
 export async function getProduct(id: string) {
-  const { data, error } = await supabaseAdmin
-    .from("products")
-    .select("*")
-    .eq("id", id)
-    .single()
+
+  const { data, error } =
+    await supabaseAdmin
+      .from("products")
+      .select("*")
+      .eq("id", id)
+      .single()
 
   if (error) throw error
 
   return data
+
 }
+
+//---------------------------------------------
+// ویرایش
+//---------------------------------------------
 
 export async function updateProduct(
+
   id: string,
-  values: {
-    title: string
-    slug: string
-    description: string
-    image: string | null
-    price: number
-    stock: number
-    category: string | null
-    published: boolean
-  }
+
+  input: CreateProductInput
+
 ) {
-  const { data, error } = await supabaseAdmin
-    .from("products")
-    .update(values)
-    .eq("id", id)
-    .select()
-    .single()
+
+  const { data, error } =
+    await supabaseAdmin
+      .from("products")
+      .update({
+
+        title: input.title,
+
+        slug: input.slug,
+
+        description: input.description,
+
+        body: input.body,
+
+        image: input.image,
+
+        price: input.price,
+
+        stock: input.stock,
+
+        category_id: input.category_id,
+
+        brand_id: input.brand_id,
+
+        featured: input.featured,
+
+        published: input.published,
+
+        weight: input.weight,
+
+        tags: input.tags,
+
+      })
+
+      .eq("id", id)
+
+      .select()
+
+      .single()
 
   if (error) throw error
 
   return data
+
 }
 
-export async function deleteProduct(id: string) {
-  const { error } = await supabaseAdmin
-    .from("products")
-    .delete()
-    .eq("id", id)
+//---------------------------------------------
+// حذف
+//---------------------------------------------
+
+export async function deleteProduct(
+
+  id: string
+
+) {
+
+  const { error } =
+    await supabaseAdmin
+      .from("products")
+      .delete()
+      .eq("id", id)
 
   if (error) throw error
 
-  return true
 }
