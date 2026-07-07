@@ -1,69 +1,158 @@
 import { NextRequest } from "next/server"
 
 import {
+
   apiSuccess,
-  apiError,
+
   apiException,
-  requireAdmin,
+
 } from "@/lib/admin"
 
 import {
+
   getProduct,
+
   updateProduct,
+
   deleteProduct,
+
 } from "@/lib/admin/product"
 
+//---------------------------------------
+// GET
+//---------------------------------------
+
 export async function GET(
+
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+
+  {
+
+    params,
+
+  }: {
+
+    params: Promise<{
+
+      id: string
+
+    }>
+
+  }
+
 ) {
+
   try {
-    await requireAdmin(request)
 
     const { id } = await params
 
-    const product = await getProduct(id)
+    const product =
+      await getProduct(id)
 
     return apiSuccess(product)
-  } catch (error) {
-    return apiException(error)
+
   }
+
+  catch (error) {
+
+    return apiException(error)
+
+  }
+
 }
+
+//---------------------------------------
+// PUT
+//---------------------------------------
 
 export async function PUT(
+
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+
+  {
+
+    params,
+
+  }: {
+
+    params: Promise<{
+
+      id: string
+
+    }>
+
+  }
+
 ) {
+
   try {
-    await requireAdmin(request)
 
-    const { id } = await params
+    const body =
+      await request.json()
 
-    const body = await request.json()
+    const { id } =
+      await params
 
-    const product = await updateProduct(id, body)
+    const product =
+      await updateProduct(
+
+        id,
+
+        body
+
+      )
 
     return apiSuccess(product)
-  } catch (error) {
-    return apiException(error)
+
   }
+
+  catch (error) {
+
+    return apiException(error)
+
+  }
+
 }
 
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    await requireAdmin(request)
+//---------------------------------------
+// DELETE
+//---------------------------------------
 
-    const { id } = await params
+export async function DELETE(
+
+  request: NextRequest,
+
+  {
+
+    params,
+
+  }: {
+
+    params: Promise<{
+
+      id: string
+
+    }>
+
+  }
+
+) {
+
+  try {
+
+    const { id } =
+      await params
 
     await deleteProduct(id)
 
-    return apiSuccess({
-      deleted: true,
-    })
-  } catch (error) {
-    return apiException(error)
+    return apiSuccess(true)
+
   }
+
+  catch (error) {
+
+    return apiException(error)
+
+  }
+
 }
