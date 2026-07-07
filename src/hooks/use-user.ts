@@ -49,5 +49,7 @@ export function useUser() {
     user,
     loading,
     isAuthenticated: !!user,
+    accessToken:
+      session?.access_token ?? null,
   }
 }
