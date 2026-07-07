@@ -81,3 +81,40 @@ export async function getProducts(
     pageSize,
   }
 }
+//------------------------------------------------------
+// Create Product
+//------------------------------------------------------
+
+export interface CreateProductInput {
+  title: string
+  slug: string
+  description?: string
+  image?: string | null
+  price: number
+  stock: number
+  category?: string | null
+  published?: boolean
+}
+
+export async function createProduct(
+  input: CreateProductInput
+) {
+  const { data, error } = await supabaseAdmin
+    .from("products")
+    .insert({
+      title: input.title,
+      slug: input.slug,
+      description: input.description ?? "",
+      image: input.image ?? null,
+      price: input.price,
+      stock: input.stock,
+      category: input.category ?? null,
+      published: input.published ?? true,
+    })
+    .select()
+    .single()
+
+  if (error) throw error
+
+  return data
+}
