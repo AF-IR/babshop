@@ -80,3 +80,61 @@ export async function GET(
 
   }
 }
+//------------------------------------------------------
+// POST
+//------------------------------------------------------
+
+import { createProduct } from "@/lib/admin/products"
+
+export async function POST(
+  request: NextRequest
+) {
+  try {
+
+    await requireAdmin(request)
+
+    const body = await request.json()
+
+    if (!body.title) {
+      throw new Error("Title is required.")
+    }
+
+    if (!body.slug) {
+      throw new Error("Slug is required.")
+    }
+
+    if (
+      body.price === undefined ||
+      body.price === null
+    ) {
+      throw new Error("Price is required.")
+    }
+
+    if (
+      body.stock === undefined ||
+      body.stock === null
+    ) {
+      throw new Error("Stock is required.")
+    }
+
+    const product =
+      await createProduct({
+        title: body.title,
+        slug: body.slug,
+        description: body.description,
+        image: body.image,
+        price: Number(body.price),
+        stock: Number(body.stock),
+        category: body.category,
+        published:
+          body.published ?? true,
+      })
+
+    return apiSuccess(product, 201)
+
+  } catch (error) {
+
+    return apiException(error)
+
+  }
+}
