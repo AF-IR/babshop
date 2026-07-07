@@ -3,19 +3,21 @@ import { NextRequest } from "next/server"
 import {
   apiException,
   apiSuccess,
-  requireAdmin,
 } from "@/lib/admin"
 
 import {
   getProducts,
+  createProduct,
 } from "@/lib/admin/products"
+
+//------------------------------------------------------
+// GET
+//------------------------------------------------------
 
 export async function GET(
   request: NextRequest
 ) {
   try {
-
-    await requireAdmin(request)
 
     const { searchParams } =
       new URL(request.url)
@@ -45,32 +47,25 @@ export async function GET(
       | boolean
       | undefined
 
-    if (
-      publishedValue === "true"
-    ) {
+    if (publishedValue === "true") {
       published = true
     }
 
-    if (
-      publishedValue === "false"
-    ) {
+    if (publishedValue === "false") {
       published = false
     }
 
     const result =
       await getProducts({
-
         page,
-
         pageSize,
-
         search,
-
         category,
-
         published,
-
       })
+
+    console.log("Products API Result:")
+    console.log(JSON.stringify(result, null, 2))
 
     return apiSuccess(result)
 
@@ -80,18 +75,15 @@ export async function GET(
 
   }
 }
+
 //------------------------------------------------------
 // POST
 //------------------------------------------------------
-
-import { createProduct } from "@/lib/admin/products"
 
 export async function POST(
   request: NextRequest
 ) {
   try {
-
-    await requireAdmin(request)
 
     const body = await request.json()
 
@@ -119,6 +111,7 @@ export async function POST(
 
     const product =
       await createProduct({
+
         title: body.title,
         slug: body.slug,
         description: body.description,
@@ -128,6 +121,7 @@ export async function POST(
         category: body.category,
         published:
           body.published ?? true,
+
       })
 
     return apiSuccess(product, 201)
