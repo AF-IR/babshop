@@ -1,5 +1,5 @@
 "use client"
-
+import Link from "next/link"
 import { useEffect, useState } from "react"
 
 import ProductTable
@@ -49,6 +49,22 @@ export default function ProductsPage() {
         مدیریت محصولات
 
       </h1>
+
+      <div className="flex justify-end">
+
+        <Link
+
+          href="/admin/products/create"
+
+          className="rounded bg-black px-5 py-3 text-white"
+
+        >
+
+          افزودن محصول
+
+        </Link>
+
+      </div>
 
       <ProductTable
 
