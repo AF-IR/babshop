@@ -85,17 +85,82 @@ export async function getProducts(
 // Create Product
 //------------------------------------------------------
 
+//------------------------------------------------------
+// ایجاد محصول
+//------------------------------------------------------
+
 export interface CreateProductInput {
   title: string
   slug: string
+
   description?: string
-  image?: string | null
+  body?: string
+
+  image?: string
+
   price: number
   stock: number
-  category?: string | null
+
+  category_id?: string | null
+  brand_id?: string | null
+
+  featured?: boolean
   published?: boolean
+
+  weight?: number | null
+
+  tags?: string[]
 }
 
+export async function createProduct(
+  input: CreateProductInput
+) {
+  const { data, error } =
+    await supabaseAdmin
+      .from("products")
+      .insert({
+        title: input.title,
+
+        slug: input.slug,
+
+        description:
+          input.description ?? null,
+
+        body:
+          input.body ?? null,
+
+        image:
+          input.image ?? null,
+
+        price: input.price,
+
+        stock: input.stock,
+
+        category_id:
+          input.category_id ?? null,
+
+        brand_id:
+          input.brand_id ?? null,
+
+        featured:
+          input.featured ?? false,
+
+        published:
+          input.published ?? true,
+
+        weight:
+          input.weight ?? 0,
+
+        tags:
+          input.tags ?? [],
+      })
+      .select()
+      .single()
+
+  if (error) throw error
+
+  return data
+}
 export async function createProduct(
   input: CreateProductInput
 ) {
