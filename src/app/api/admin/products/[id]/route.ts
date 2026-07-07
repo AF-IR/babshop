@@ -1,74 +1,64 @@
+import { NextRequest } from "next/server"
+
 import {
-  apiException,
-  apiError,
   apiSuccess,
-  supabaseAdmin,
+  apiError,
+  apiException,
+  requireAdmin,
 } from "@/lib/admin"
 
+import {
+  getProduct,
+  updateProduct,
+  deleteProduct,
+} from "@/lib/admin/product"
+
 export async function GET(
-  request: Request,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    await requireAdmin(request)
+
     const { id } = await params
 
-    const {
-      data,
-      error,
-    } = await supabaseAdmin
-      .from("products")
-      .select("*")
-      .eq("id", id)
-      .single()
+    const product = await getProduct(id)
 
-    if (error) {
-      return apiError("محصول پیدا نشد", 404)
-    }
-
-    return apiSuccess(data)
+    return apiSuccess(product)
   } catch (error) {
     return apiException(error)
   }
 }
-export async function PATCH(
-  request: Request,
+
+export async function PUT(
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    await requireAdmin(request)
+
     const { id } = await params
 
     const body = await request.json()
 
-    const {
-      data,
-      error,
-    } = await supabaseAdmin
-      .from("products")
-      .update(body)
-      .eq("id", id)
-      .select()
-      .single()
+    const product = await updateProduct(id, body)
 
-    if (error) throw error
-
-    return apiSuccess(data)
+    return apiSuccess(product)
   } catch (error) {
     return apiException(error)
   }
 }
+
 export async function DELETE(
-  request: Request,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    await requireAdmin(request)
+
     const { id } = await params
 
-    const { error } = await supabaseAdmin
-      .from("products")
-      .delete()
-      .eq("id", id)
-
-    if (error) throw error
+    await deleteProduct(id)
 
     return apiSuccess({
       deleted: true,
