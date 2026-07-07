@@ -15,20 +15,31 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode
 }) {
-  const { user, isReady } = useAuthGuard()
+  const { user, isReady, isLoading, isAdmin } = useAuthGuard()
 
-  if (!isReady) return null
-
-  if (user?.role !== "admin") {
+  // در حال بررسی دسترسی
+  if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold">Access Denied</h1>
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto mb-4" />
+          <p className="text-muted-foreground">در حال بررسی دسترسی...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // دسترسی غیرمجاز
+  if (!isReady || !isAdmin) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold">دسترسی غیرمجاز</h1>
           <p className="mt-2 text-muted-foreground">
-            You need admin privileges to access this page.
+            شما به پنل مدیریت دسترسی ندارید.
           </p>
           <Link href="/" className="mt-4 inline-block text-sm underline">
-            Go Home
+            بازگشت به فروشگاه
           </Link>
         </div>
       </div>
@@ -41,7 +52,7 @@ export default function AdminLayout({
       <aside className="hidden w-64 border-r bg-neutral-50 lg:block">
         <div className="flex h-16 items-center border-b px-6">
           <Link href="/admin" className="text-lg font-semibold">
-            Admin
+            پنل مدیریت
           </Link>
         </div>
         <nav className="space-y-1 p-4">
@@ -61,7 +72,7 @@ export default function AdminLayout({
             href="/"
             className="text-sm text-muted-foreground hover:text-foreground"
           >
-            &larr; Back to Store
+            &larr; بازگشت به فروشگاه
           </Link>
         </div>
       </aside>
