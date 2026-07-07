@@ -161,25 +161,3 @@ export async function createProduct(
 
   return data
 }
-export async function createProduct(
-  input: CreateProductInput
-) {
-  const { data, error } = await supabaseAdmin
-    .from("products")
-    .insert({
-      title: input.title,
-      slug: input.slug,
-      description: input.description ?? "",
-      image: input.image ?? null,
-      price: input.price,
-      stock: input.stock,
-      category: input.category ?? null,
-      published: input.published ?? true,
-    })
-    .select()
-    .single()
-
-  if (error) throw error
-
-  return data
-}
