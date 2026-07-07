@@ -3,111 +3,66 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 
+import {
+
+  createProduct,
+
+} from "@/lib/admin/products-client"
+
 export default function ProductForm() {
 
   const router = useRouter()
 
-  const [loading,setLoading]=useState(false)
+  const [loading, setLoading] =
+    useState(false)
 
-  const [form,setForm]=useState({
+  const [title, setTitle] =
+    useState("")
 
-    title:"",
+  const [slug, setSlug] =
+    useState("")
 
-    slug:"",
+  const [description, setDescription] =
+    useState("")
 
-    description:"",
+  const [image, setImage] =
+    useState("")
 
-    image:"",
+  const [price, setPrice] =
+    useState(0)
 
-    price:0,
+  const [stock, setStock] =
+    useState(0)
 
-    stock:0,
+  async function submit() {
 
-    category:"",
+    setLoading(true)
 
-    published:true,
+    try {
 
-  })
+      await createProduct({
 
-  function update(
+        title,
 
-    key:string,
+        slug,
 
-    value:any
+        description,
 
-  ){
+        image,
 
-    setForm({
+        price,
 
-      ...form,
+        stock,
 
-      [key]:value,
+        published: true,
 
-    })
-
-  }
-
-  async function submit(){
-
-    try{
-
-      setLoading(true)
-
-      const res=await fetch(
-
-        "/api/admin/products",
-
-        {
-
-          method:"POST",
-
-          headers:{
-
-            "Content-Type":"application/json"
-
-          },
-
-          body:JSON.stringify(form)
-
-        }
-
-      )
-
-      const json=await res.json()
-
-      if(!res.ok){
-
-        throw new Error(
-
-          json.error ??
-
-          "خطا"
-
-        )
-
-      }
+      })
 
       router.push("/admin/products")
 
-      router.refresh()
-
     }
 
-    catch(e){
-
-      alert(
-
-        e instanceof Error
-
-        ?e.message
-
-        :"خطا"
-
-      )
-
-    }
-
-    finally{
+    finally {
 
       setLoading(false)
 
@@ -115,141 +70,101 @@ export default function ProductForm() {
 
   }
 
-  return(
+  return (
 
-    <div className="space-y-5">
+    <div className="space-y-5 max-w-3xl">
 
       <input
 
-        className="w-full border rounded p-3"
+        className="w-full rounded border p-3"
 
         placeholder="عنوان"
 
-        value={form.title}
+        value={title}
 
-        onChange={e=>update("title",e.target.value)}
+        onChange={e=>setTitle(e.target.value)}
 
       />
 
       <input
 
-        className="w-full border rounded p-3"
+        className="w-full rounded border p-3"
 
         placeholder="Slug"
 
-        value={form.slug}
+        value={slug}
 
-        onChange={e=>update("slug",e.target.value)}
+        onChange={e=>setSlug(e.target.value)}
 
       />
 
       <textarea
 
-        className="w-full border rounded p-3"
-
-        rows={5}
+        className="w-full rounded border p-3"
 
         placeholder="توضیحات"
 
-        value={form.description}
+        value={description}
 
-        onChange={e=>update("description",e.target.value)}
+        onChange={e=>setDescription(e.target.value)}
 
       />
 
       <input
 
-        className="w-full border rounded p-3"
+        className="w-full rounded border p-3"
 
         placeholder="لینک تصویر"
 
-        value={form.image}
+        value={image}
 
-        onChange={e=>update("image",e.target.value)}
+        onChange={e=>setImage(e.target.value)}
 
       />
 
       <input
 
-        className="w-full border rounded p-3"
-
         type="number"
+
+        className="w-full rounded border p-3"
 
         placeholder="قیمت"
 
-        value={form.price}
+        value={price}
 
-        onChange={e=>update("price",Number(e.target.value))}
+        onChange={e=>setPrice(Number(e.target.value))}
 
       />
 
       <input
-
-        className="w-full border rounded p-3"
 
         type="number"
 
+        className="w-full rounded border p-3"
+
         placeholder="موجودی"
 
-        value={form.stock}
+        value={stock}
 
-        onChange={e=>update("stock",Number(e.target.value))}
-
-      />
-
-      <input
-
-        className="w-full border rounded p-3"
-
-        placeholder="دسته"
-
-        value={form.category}
-
-        onChange={e=>update("category",e.target.value)}
+        onChange={e=>setStock(Number(e.target.value))}
 
       />
-
-      <label className="flex gap-3">
-
-        <input
-
-          type="checkbox"
-
-          checked={form.published}
-
-          onChange={e=>update(
-
-            "published",
-
-            e.target.checked
-
-          )}
-
-        />
-
-        فعال
-
-      </label>
 
       <button
 
-        onClick={submit}
-
         disabled={loading}
 
-        className="rounded bg-black text-white px-6 py-3"
+        onClick={submit}
+
+        className="rounded bg-black px-6 py-3 text-white"
 
       >
 
-        {
+        {loading
 
-          loading
+          ? "در حال ذخیره..."
 
-          ?"درحال ثبت..."
-
-          :"ثبت محصول"
-
-        }
+          : "ثبت محصول"}
 
       </button>
 
