@@ -20,38 +20,55 @@ export async function GET(
     const { searchParams } =
       new URL(request.url)
 
-    const page = Number(
-      searchParams.get("page") ?? "1"
-    )
+    const page =
+      Number(
+        searchParams.get("page")
+      ) || 1
 
-    const limit = Number(
-      searchParams.get("limit") ?? "20"
-    )
+    const pageSize =
+      Number(
+        searchParams.get("pageSize")
+      ) || 20
 
     const search =
-      searchParams.get("search") ?? undefined
+      searchParams.get("search")
+      ?? undefined
 
     const category =
-      searchParams.get("category") ?? undefined
+      searchParams.get("category")
+      ?? undefined
 
-    const published =
+    const publishedValue =
       searchParams.get("published")
+
+    let published:
+      | boolean
+      | undefined
+
+    if (
+      publishedValue === "true"
+    ) {
+      published = true
+    }
+
+    if (
+      publishedValue === "false"
+    ) {
+      published = false
+    }
 
     const result =
       await getProducts({
 
         page,
 
-        limit,
+        pageSize,
 
         search,
 
         category,
 
-        published:
-          published === null
-            ? undefined
-            : published === "true",
+        published,
 
       })
 
