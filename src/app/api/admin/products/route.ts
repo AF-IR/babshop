@@ -151,6 +151,9 @@ export async function POST(
 
   } catch (error) {
 
+    console.error("CREATE PRODUCT ERROR")
+    console.error(error)
+
     return apiException(error)
 
   }
