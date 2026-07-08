@@ -2,222 +2,196 @@
 
 import { useEffect, useState } from "react"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { PageHeader } from "@/components/ui/page-header"
+import Link from "next/link"
 
 import {
-  DollarSign,
-  Package,
-  ShoppingCart,
-  Users,
-  Loader2,
-} from "lucide-react"
 
-interface DashboardData {
-  products: number
-  orders: number
-  users: number
-  categories: number
-  pendingOrders: number
-  shippedOrders: number
-  totalSales: number
+getDashboard,
+
+} from "@/lib/admin/dashboard-client"
+
+export default function AdminDashboard(){
+
+const [
+
+stats,
+
+setStats,
+
+]=useState<any>(null)
+
+useEffect(()=>{
+
+load()
+
+},[])
+
+async function load(){
+
+const json=
+
+await getDashboard()
+
+setStats(json.data)
+
 }
 
-export default function AdminDashboardPage() {
-  const [loading, setLoading] = useState(true)
+if(!stats){
 
-  const [data, setData] = useState<DashboardData>({
-    products: 0,
-    orders: 0,
-    users: 0,
-    categories: 0,
-    pendingOrders: 0,
-    shippedOrders: 0,
-    totalSales: 0,
-  })
+return(
 
-  useEffect(() => {
-    loadDashboard()
-  }, [])
+<div>
 
-  async function loadDashboard() {
-    try {
-      const res = await fetch("/api/admin/dashboard")
+در حال بارگذاری...
 
-      const json = await res.json()
+</div>
 
-      if (json.success) {
-        setData(json.data)
-      } else {
-        console.error(json.error)
-      }
-    } catch (e) {
-      console.error(e)
-    } finally {
-      setLoading(false)
-    }
-  }
+)
 
-  if (loading) {
-    return (
-      <div className="flex justify-center py-20">
-        <Loader2 className="h-10 w-10 animate-spin" />
-      </div>
-    )
-  }
+}
 
-  return (
-    <div>
+return(
 
-      <PageHeader
-        title="داشبورد مدیریت"
-        description="وضعیت کلی فروشگاه"
-      />
+<div className="space-y-8">
 
-      <div className="grid gap-5 mt-8 md:grid-cols-2 xl:grid-cols-4">
+<h1 className="text-3xl font-bold">
 
-        <Card>
-          <CardHeader className="flex flex-row justify-between items-center">
-            <CardTitle className="text-sm">
-              فروش کل
-            </CardTitle>
+داشبورد مدیریت
 
-            <DollarSign className="h-5 w-5 text-muted-foreground"/>
-          </CardHeader>
+</h1>
 
-          <CardContent>
+<div className="grid gap-6 md:grid-cols-3">
 
-            <div className="text-2xl font-bold">
-              {data.totalSales.toLocaleString()}
-            </div>
+<Card
 
-            <p className="text-xs text-muted-foreground mt-1">
-              ریال
-            </p>
+title="محصولات"
 
-          </CardContent>
-        </Card>
+value={stats.totalProducts}
 
-        <Card>
-          <CardHeader className="flex flex-row justify-between items-center">
-            <CardTitle className="text-sm">
-              سفارش‌ها
-            </CardTitle>
+color="bg-blue-600"
 
-            <ShoppingCart className="h-5 w-5 text-muted-foreground"/>
-          </CardHeader>
+/>
 
-          <CardContent>
+<Card
 
-            <div className="text-2xl font-bold">
-              {data.orders}
-            </div>
+title="سفارشات"
 
-            <p className="text-xs text-muted-foreground">
-              کل سفارش‌ها
-            </p>
+value={stats.totalOrders}
 
-          </CardContent>
-        </Card>
+color="bg-green-600"
 
-        <Card>
-          <CardHeader className="flex flex-row justify-between items-center">
-            <CardTitle className="text-sm">
-              محصولات
-            </CardTitle>
+/>
 
-            <Package className="h-5 w-5 text-muted-foreground"/>
-          </CardHeader>
+<Card
 
-          <CardContent>
+title="کاربران"
 
-            <div className="text-2xl font-bold">
-              {data.products}
-            </div>
+value={stats.totalUsers}
 
-            <p className="text-xs text-muted-foreground">
-              محصول ثبت شده
-            </p>
+color="bg-purple-600"
 
-          </CardContent>
-        </Card>
+/>
 
-        <Card>
-          <CardHeader className="flex flex-row justify-between items-center">
-            <CardTitle className="text-sm">
-              کاربران
-            </CardTitle>
+</div>
 
-            <Users className="h-5 w-5 text-muted-foreground"/>
-          </CardHeader>
+<div className="grid gap-5 md:grid-cols-2">
 
-          <CardContent>
+<Link
 
-            <div className="text-2xl font-bold">
-              {data.users}
-            </div>
+href="/admin/products"
 
-            <p className="text-xs text-muted-foreground">
-              عضو سایت
-            </p>
+className="rounded-lg border p-6 hover:bg-muted"
 
-          </CardContent>
-        </Card>
+>
 
-      </div>
+مدیریت محصولات
 
-      <div className="grid gap-5 mt-8 md:grid-cols-2">
+</Link>
 
-        <Card>
+<Link
 
-          <CardHeader>
+href="/admin/orders"
 
-            <CardTitle>
+className="rounded-lg border p-6 hover:bg-muted"
 
-              سفارش‌های در انتظار
+>
 
-            </CardTitle>
+مدیریت سفارشات
 
-          </CardHeader>
+</Link>
 
-          <CardContent>
+<Link
 
-            <div className="text-4xl font-bold">
+href="/admin/categories"
 
-              {data.pendingOrders}
+className="rounded-lg border p-6 hover:bg-muted"
 
-            </div>
+>
 
-          </CardContent>
+مدیریت دسته بندی
 
-        </Card>
+</Link>
 
-        <Card>
+<Link
 
-          <CardHeader>
+href="/admin/brands"
 
-            <CardTitle>
+className="rounded-lg border p-6 hover:bg-muted"
 
-              سفارش‌های ارسال شده
+>
 
-            </CardTitle>
+مدیریت برندها
 
-          </CardHeader>
+</Link>
 
-          <CardContent>
+</div>
 
-            <div className="text-4xl font-bold">
+</div>
 
-              {data.shippedOrders}
+)
 
-            </div>
+}
 
-          </CardContent>
+function Card({
 
-        </Card>
+title,
 
-      </div>
+value,
 
-    </div>
-  )
+color,
+
+}:{
+
+title:string
+
+value:number
+
+color:string
+
+}){
+
+return(
+
+<div
+
+className={`${color} rounded-xl p-6 text-white`}
+
+>
+
+<div className="text-lg">
+
+{title}
+
+</div>
+
+<div className="mt-4 text-5xl font-bold">
+
+{value}
+
+</div>
+
+</div>
+
+)
+
 }
