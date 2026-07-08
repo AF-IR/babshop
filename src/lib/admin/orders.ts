@@ -129,26 +129,30 @@ customer_email.ilike.%${filters.search}%`
 //--------------------------------------------------
 
 export async function getOrder(
-
   id: string
-
 ) {
 
-  const {
+  const { data, error } =
+    await supabaseAdmin
 
-    data,
+      .from("orders")
 
-    error,
+      .select(`
+        *,
+        order_items(
+          *,
+          products(
+            id,
+            title,
+            image,
+            slug
+          )
+        )
+      `)
 
-  } = await supabaseAdmin
+      .eq("id", id)
 
-    .from("orders")
-
-    .select("*")
-
-    .eq("id", id)
-
-    .single()
+      .single()
 
   if (error)
     throw error
