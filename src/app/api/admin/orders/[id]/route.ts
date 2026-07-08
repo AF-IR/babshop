@@ -1,82 +1,119 @@
+import { NextRequest } from "next/server"
+
 import {
-  apiError,
-  apiException,
+
   apiSuccess,
-  supabaseAdmin,
+
+  apiException,
+
 } from "@/lib/admin"
 
+import {
+
+  getOrder,
+
+  updateOrderStatus,
+
+} from "@/lib/admin/orders"
+
+//--------------------------------------------------
+
 export async function GET(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { id } = await params
 
-    const { data, error } = await supabaseAdmin
-      .from("orders")
-      .select(`
-        *,
-        order_items(*),
-        payments(*)
-      `)
-      .eq("id", id)
-      .single()
+request:NextRequest,
 
-    if (error) {
-      return apiError("سفارش پیدا نشد", 404)
-    }
+{
 
-    return apiSuccess(data)
-  } catch (error) {
-    return apiException(error)
-  }
+params,
+
+}:{
+
+params:Promise<{
+
+id:string
+
+}>
+
 }
 
-export async function PATCH(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { id } = await params
+){
 
-    const body = await request.json()
+try{
 
-    const {
-      data,
-      error,
-    } = await supabaseAdmin
-      .from("orders")
-      .update(body)
-      .eq("id", id)
-      .select()
-      .single()
+const{
 
-    if (error) throw error
+id,
 
-    return apiSuccess(data)
-  } catch (error) {
-    return apiException(error)
-  }
+}=await params
+
+const order=
+
+await getOrder(id)
+
+return apiSuccess(order)
+
 }
 
-export async function DELETE(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { id } = await params
+catch(error){
 
-    const { error } = await supabaseAdmin
-      .from("orders")
-      .delete()
-      .eq("id", id)
+return apiException(error)
 
-    if (error) throw error
+}
 
-    return apiSuccess({
-      deleted: true,
-    })
-  } catch (error) {
-    return apiException(error)
-  }
+}
+
+//--------------------------------------------------
+
+export async function PUT(
+
+request:NextRequest,
+
+{
+
+params,
+
+}:{
+
+params:Promise<{
+
+id:string
+
+}>
+
+}
+
+){
+
+try{
+
+const{
+
+id,
+
+}=await params
+
+const body=
+
+await request.json()
+
+const order=
+
+await updateOrderStatus(
+
+id,
+
+body.status
+
+)
+
+return apiSuccess(order)
+
+}
+
+catch(error){
+
+return apiException(error)
+
+}
+
 }
