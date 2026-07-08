@@ -112,52 +112,38 @@ export interface CreateProductInput {
   tags?: string[]
 }
 
+
 export async function createProduct(
   input: CreateProductInput
 ) {
+
   const { data, error } =
     await supabaseAdmin
       .from("products")
       .insert({
         title: input.title,
-
         slug: input.slug,
-
-        description:
-          input.description ?? null,
-
-        body:
-          input.body ?? null,
-
-        image:
-          input.image ?? null,
-
+        description: input.description ?? null,
+        body: input.body ?? null,
+        image: input.image ?? null,
         price: input.price,
-
         stock: input.stock,
-
-        category_id:
-          input.category_id ?? null,
-
-        brand_id:
-          input.brand_id ?? null,
-
-        featured:
-          input.featured ?? false,
-
-        published:
-          input.published ?? true,
-
-        weight:
-          input.weight ?? 0,
-
-        tags:
-          input.tags ?? [],
+        category_id: input.category_id ?? null,
+        brand_id: input.brand_id ?? null,
+        featured: input.featured ?? false,
+        published: input.published ?? true,
+        weight: input.weight ?? 0,
+        tags: input.tags ?? [],
       })
       .select()
-      .single()
 
-  if (error) throw error
+  if (error) {
 
-  return data
+    console.log("SUPABASE ERROR")
+    console.log(JSON.stringify(error, null, 2))
+
+    throw error
+  }
+
+  return data?.[0]
 }
