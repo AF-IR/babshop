@@ -1,6 +1,9 @@
 "use client"
 
 import Link from "next/link"
+import { useState } from "react"
+
+import { deleteProduct } from "@/lib/admin/products-client"
 import { AdminProduct } from "@/types/admin-product"
 
 interface Props {
@@ -8,6 +11,21 @@ interface Props {
 }
 
 export default function ProductTable({ products }: Props) {
+  const [items, setItems] = useState(products)
+
+  async function remove(id: string) {
+    const ok = window.confirm("آیا از حذف این محصول مطمئن هستید؟")
+    if (!ok) return
+
+    try {
+      await deleteProduct(id)
+      setItems((old) => old.filter((x) => x.id !== id))
+      alert("محصول حذف شد.")
+    } catch {
+      alert("حذف انجام نشد.")
+    }
+  }
+
   return (
     <div className="rounded-lg border overflow-hidden">
       <table className="w-full">
@@ -22,7 +40,7 @@ export default function ProductTable({ products }: Props) {
           </tr>
         </thead>
         <tbody>
-          {products.map((product) => (
+          {items.map((product) => (
             <tr key={product.id} className="border-t">
               <td className="p-3">
                 <img
@@ -45,6 +63,7 @@ export default function ProductTable({ products }: Props) {
                     ویرایش
                   </Link>
                   <button
+                    onClick={() => remove(product.id)}
                     className="rounded bg-red-600 px-3 py-1 text-white text-sm"
                   >
                     حذف
