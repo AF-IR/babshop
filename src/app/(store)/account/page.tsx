@@ -2,12 +2,14 @@
 
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { PageHeader } from "@/components/ui/page-header"
 import { Package, MapPin, Settings, Heart, LogOut } from "lucide-react"
-import { useAuthGuard } from "@/hooks/use-auth-guard"
+import { useUser } from "@/hooks/use-user"
 import { useAuthStore } from "@/store/auth"
+import { PageLoader } from "@/components/ui/page-loader"
 
 const accountLinks = [
   { name: "سفارش‌ها", description: "مشاهده تاریخچه سفارش‌ها و پیگیری وضعیت ارسال", href: "/account/orders", icon: Package },
@@ -17,15 +19,29 @@ const accountLinks = [
 ]
 
 export default function AccountPage() {
-  const { user, isReady } = useAuthGuard()
+  const { user, loading: userLoading } = useUser()
   const logout = useAuthStore((s) => s.logout)
   const router = useRouter()
+  const [showLoader, setShowLoader] = useState(true)
 
-  if (!isReady) return null
+  useEffect(() => {
+    if (!userLoading) {
+      setShowLoader(false)
+    }
+  }, [userLoading])
+
+  if (userLoading || showLoader) {
+    return <PageLoader isLoading={true} />
+  }
+
+  if (!user) {
+    router.replace("/auth/login?redirect=/account")
+    return null
+  }
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6 lg:px-8 font-[family-name:var(--font-vazir)]">
-      <PageHeader title="حساب کاربری" description={`خوش آمدید، ${user?.firstName}!`}>
+      <PageHeader title="حساب کاربری" description={`خوش آمدید، ${user.firstName}!`}>
         <Button
           variant="outline"
           onClick={async () => {
@@ -39,7 +55,6 @@ export default function AccountPage() {
         </Button>
       </PageHeader>
 
-      
       <div className="mt-8 grid gap-4 sm:grid-cols-2">
         {accountLinks.map((item) => (
           <Link key={item.name} href={item.href}>
