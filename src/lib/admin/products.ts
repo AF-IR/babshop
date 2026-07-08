@@ -147,3 +147,58 @@ export async function createProduct(
 
   return data?.[0]
 }
+export async function getProduct(
+  id: string
+) {
+
+  const { data, error } =
+    await supabaseAdmin
+      .from("products")
+      .select("*")
+      .eq("id", id)
+      .single()
+
+  if (error)
+    throw error
+
+  return data
+
+}
+export async function updateProduct(
+
+  id: string,
+
+  body: Partial<CreateProductInput>
+
+) {
+
+  const { data, error } =
+    await supabaseAdmin
+      .from("products")
+      .update(body)
+      .eq("id", id)
+      .select()
+      .single()
+
+  if (error)
+    throw error
+
+  return data
+
+}
+export async function deleteProduct(
+
+  id: string
+
+) {
+
+  const { error } =
+    await supabaseAdmin
+      .from("products")
+      .delete()
+      .eq("id", id)
+
+  if (error)
+    throw error
+
+}
