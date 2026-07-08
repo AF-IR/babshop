@@ -1,47 +1,20 @@
 import { NextRequest } from "next/server"
 
 import {
-
   apiSuccess,
-
   apiException,
-
 } from "@/lib/admin"
 
 import {
-
   getProduct,
-
   updateProduct,
-
   deleteProduct,
-
-} from "@/lib/admin/product"
-
-//---------------------------------------
-// GET
-//---------------------------------------
+} from "@/lib/admin/products"
 
 export async function GET(
-
   request: NextRequest,
-
-  {
-
-    params,
-
-  }: {
-
-    params: Promise<{
-
-      id: string
-
-    }>
-
-  }
-
+  { params }: { params: Promise<{ id: string }> }
 ) {
-
   try {
 
     const { id } = await params
@@ -61,45 +34,22 @@ export async function GET(
 
 }
 
-//---------------------------------------
-// PUT
-//---------------------------------------
-
 export async function PUT(
-
   request: NextRequest,
-
-  {
-
-    params,
-
-  }: {
-
-    params: Promise<{
-
-      id: string
-
-    }>
-
-  }
-
+  { params }: { params: Promise<{ id: string }> }
 ) {
 
   try {
 
+    const { id } = await params
+
     const body =
       await request.json()
 
-    const { id } =
-      await params
-
     const product =
       await updateProduct(
-
         id,
-
         body
-
       )
 
     return apiSuccess(product)
@@ -114,38 +64,20 @@ export async function PUT(
 
 }
 
-//---------------------------------------
-// DELETE
-//---------------------------------------
-
 export async function DELETE(
-
   request: NextRequest,
-
-  {
-
-    params,
-
-  }: {
-
-    params: Promise<{
-
-      id: string
-
-    }>
-
-  }
-
+  { params }: { params: Promise<{ id: string }> }
 ) {
 
   try {
 
-    const { id } =
-      await params
+    const { id } = await params
 
     await deleteProduct(id)
 
-    return apiSuccess(true)
+    return apiSuccess({
+      success: true,
+    })
 
   }
 
