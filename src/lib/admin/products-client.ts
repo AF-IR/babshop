@@ -63,14 +63,20 @@ export async function updateProduct(
 //--------------------------------------------------
 // حذف
 //--------------------------------------------------
-
 export async function deleteProduct(
   id: string
 ) {
+
   return adminFetch(
+
     `/api/admin/products/${id}`,
+
     {
+
       method: "DELETE",
+
     }
+
   )
+
 }
