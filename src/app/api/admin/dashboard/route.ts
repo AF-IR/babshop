@@ -1,103 +1,33 @@
 import {
-  apiException,
-  apiSuccess,
-  supabaseAdmin,
+
+apiSuccess,
+
+apiException,
+
 } from "@/lib/admin"
 
-export async function GET() {
-  try {
-    //--------------------------------------------------
-    // محصولات
-    //--------------------------------------------------
+import {
 
-    const { count: products } = await supabaseAdmin
-      .from("products")
-      .select("*", {
-        count: "exact",
-        head: true,
-      })
+getDashboardStats,
 
-    //--------------------------------------------------
-    // سفارش ها
-    //--------------------------------------------------
+} from "@/lib/admin/dashboard"
 
-    const { count: orders } = await supabaseAdmin
-      .from("orders")
-      .select("*", {
-        count: "exact",
-        head: true,
-      })
+export async function GET(){
 
-    //--------------------------------------------------
-    // کاربران
-    //--------------------------------------------------
+try{
 
-    const {
-      data: { users },
-    } = await supabaseAdmin.auth.admin.listUsers()
+const data=
 
-    //--------------------------------------------------
-    // دسته بندی ها
-    //--------------------------------------------------
+await getDashboardStats()
 
-    const { count: categories } = await supabaseAdmin
-      .from("categories")
-      .select("*", {
-        count: "exact",
-        head: true,
-      })
+return apiSuccess(data)
 
-    //--------------------------------------------------
-    // سفارش های در انتظار
-    //--------------------------------------------------
+}
 
-    const { count: pendingOrders } = await supabaseAdmin
-      .from("orders")
-      .select("*", {
-        count: "exact",
-        head: true,
-      })
-      .eq("status", "pending")
+catch(error){
 
-    //--------------------------------------------------
-    // سفارش های ارسال شده
-    //--------------------------------------------------
+return apiException(error)
 
-    const { count: shippedOrders } = await supabaseAdmin
-      .from("orders")
-      .select("*", {
-        count: "exact",
-        head: true,
-      })
-      .eq("status", "shipped")
+}
 
-    //--------------------------------------------------
-    // فروش کل
-    //--------------------------------------------------
-
-    const { data: sales } = await supabaseAdmin
-      .from("orders")
-      .select("total")
-      .eq("payment_status", "paid")
-
-    const totalSales =
-      sales?.reduce(
-        (sum, item) => sum + Number(item.total),
-        0
-      ) ?? 0
-
-    //--------------------------------------------------
-
-    return apiSuccess({
-      products: products ?? 0,
-      orders: orders ?? 0,
-      users: users.length,
-      categories: categories ?? 0,
-      pendingOrders: pendingOrders ?? 0,
-      shippedOrders: shippedOrders ?? 0,
-      totalSales,
-    })
-  } catch (error) {
-    return apiException(error)
-  }
 }
