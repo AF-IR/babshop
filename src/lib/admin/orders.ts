@@ -1,76 +1,199 @@
 // ======================================================
 // src/lib/admin/orders.ts
-// سرویس مدیریت سفارش‌ها
+// Orders Repository
 // ======================================================
 
-import { supabaseAdmin } from "@/lib/supabase-admin"
-
-//------------------------------------------------------
-// فیلترها
-//------------------------------------------------------
+import { supabaseAdmin } from "@/lib/admin"
 
 export interface AdminOrderFilters {
+
   page?: number
-  limit?: number
+
+  pageSize?: number
+
   search?: string
+
   status?: string
+
 }
 
-//------------------------------------------------------
-// دریافت لیست سفارش‌ها
-//------------------------------------------------------
+export async function getOrders(
 
-export async function getOrders(filters: AdminOrderFilters = {}) {
-  const page = filters.page ?? 1
-  const limit = filters.limit ?? 20
+  filters: AdminOrderFilters = {}
 
-  const from = (page - 1) * limit
-  const to = from + limit - 1
+) {
 
-  let query = supabaseAdmin
-    .from("orders")
-    .select("*", {
-      count: "exact",
-    })
-    .order("created_at", {
-      ascending: false,
-    })
+  const page =
+    filters.page ?? 1
 
-  //------------------------------------------------------
-  // وضعیت سفارش
-  //------------------------------------------------------
+  const pageSize =
+    filters.pageSize ?? 20
+
+  let query =
+    supabaseAdmin
+
+      .from("orders")
+
+      .select("*", {
+
+        count: "exact",
+
+      })
+
+  //-----------------------------------
 
   if (filters.status) {
-    query = query.eq("status", filters.status)
+
+    query =
+      query.eq(
+
+        "status",
+
+        filters.status
+
+      )
+
   }
 
-  //------------------------------------------------------
-  // جستجو
-  //------------------------------------------------------
+  //-----------------------------------
 
   if (filters.search) {
-    query = query.or(
-      `order_number.ilike.%${filters.search}%,receiver_name.ilike.%${filters.search}%`
+
+    query =
+      query.or(
+
+`customer_name.ilike.%${filters.search}%,
+customer_email.ilike.%${filters.search}%`
+
+      )
+
+  }
+
+  //-----------------------------------
+
+  query = query
+
+    .order(
+
+      "created_at",
+
+      {
+
+        ascending: false,
+
+      }
+
     )
-  }
 
-  //------------------------------------------------------
-  // صفحه‌بندی
-  //------------------------------------------------------
+    .range(
 
-  query = query.range(from, to)
+      (page - 1) * pageSize,
 
-  const { data, error, count } = await query
+      page * pageSize - 1
 
-  if (error) {
+    )
+
+  //-----------------------------------
+
+  const {
+
+    data,
+
+    error,
+
+    count,
+
+  } = await query
+
+  if (error)
     throw error
-  }
 
   return {
-    items: data ?? [],
-    total: count ?? 0,
+
+    items:
+      data ?? [],
+
+    total:
+      count ?? 0,
+
     page,
-    limit,
-    totalPages: Math.ceil((count ?? 0) / limit),
+
+    pageSize,
+
   }
+
+}
+
+//--------------------------------------------------
+// یک سفارش
+//--------------------------------------------------
+
+export async function getOrder(
+
+  id: string
+
+) {
+
+  const {
+
+    data,
+
+    error,
+
+  } = await supabaseAdmin
+
+    .from("orders")
+
+    .select("*")
+
+    .eq("id", id)
+
+    .single()
+
+  if (error)
+    throw error
+
+  return data
+
+}
+
+//--------------------------------------------------
+// تغییر وضعیت
+//--------------------------------------------------
+
+export async function updateOrderStatus(
+
+  id: string,
+
+  status: string
+
+) {
+
+  const {
+
+    data,
+
+    error,
+
+  } = await supabaseAdmin
+
+    .from("orders")
+
+    .update({
+
+      status,
+
+    })
+
+    .eq("id", id)
+
+    .select()
+
+    .single()
+
+  if (error)
+    throw error
+
+  return data
+
 }
