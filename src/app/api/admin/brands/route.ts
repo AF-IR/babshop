@@ -1,38 +1,22 @@
-import { NextResponse } from "next/server"
-
+import { apiException, apiSuccess } from "@/lib/admin"
 import { supabaseAdmin } from "@/lib/admin"
 
 export async function GET() {
+  try {
 
-  const { data, error } =
-    await supabaseAdmin
+    const { data, error } =
+      await supabaseAdmin
+        .from("brands")
+        .select("id,name")
+        .order("name")
 
-      .from("brands")
+    if (error) throw error
 
-      .select("id,name")
+    return apiSuccess(data)
 
-      .order("name")
+  } catch (e) {
 
-  if (error) {
-
-    return NextResponse.json(
-      {
-        success:false,
-        error:error.message
-      },
-      {
-        status:500
-      }
-    )
+    return apiException(e)
 
   }
-
-  return NextResponse.json({
-
-    success:true,
-
-    data
-
-  })
-
 }
