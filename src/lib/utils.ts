@@ -8,22 +8,21 @@ export function cn(...inputs: ClassValue[]) {
 
 /**
  * فرمت‌سازی قیمت به صورت تومان با جداکننده هزارگان
- * مثال: ۴۳,۲۴۰,۲۰۰ تومان
+ * مثال: ۳۸۰,۰۰۰ تومان
+ * 
+ * توجه: قیمت‌ها در دیتابیس به صورت تومان ذخیره شده‌اند
  */
 export function formatPrice(
   priceInCents: number,
   currency?: string
 ): string {
-  // تقسیم بر ۱۰۰ برای تبدیل به واحد اصلی (فرض بر این است که قیمت به سنت ذخیره شده)
-  const value = priceInCents / 100
-
-  // فرمت‌سازی با جداکننده هزارگان و بدون اعشار
+  // فقط فرمت‌سازی عدد با جداکننده هزارگان و بدون اعشار
   const formatted = new Intl.NumberFormat("fa-IR", {
     useGrouping: true,
     maximumFractionDigits: 0,
-  }).format(value)
+  }).format(priceInCents)
 
-  // اضافه کردن پسوند "تومان" (به جای کد ارز IRT)
+  // اضافه کردن پسوند "تومان"
   return `${formatted} تومان`
 }
 
