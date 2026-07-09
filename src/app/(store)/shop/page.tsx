@@ -25,8 +25,8 @@ export async function generateMetadata({
   const canonical = page > 1 ? `${siteConfig.url}/shop?page=${page}` : `${siteConfig.url}/shop`
 
   return {
-    title: "Shop",
-    description: "Browse our full collection of quality products.",
+    title: "فروشگاه",
+    description: "مشاهده و خرید بهترین محصولات با کیفیت و قیمت مناسب.",
     alternates: { canonical },
   }
 }
@@ -65,21 +65,25 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
   if (categorySlug) currentParams.category = categorySlug
   if (searchQuery) currentParams.q = searchQuery
 
+  // تعیین عنوان صفحه
+  let pageTitle = "همه محصولات"
+  if (categorySlug) {
+    const category = categories.find((c) => c.slug === categorySlug)
+    pageTitle = category?.name || "دسته‌بندی"
+  } else if (searchQuery) {
+    pageTitle = `نتایج جستجو برای "${searchQuery}"`
+  }
+
   return (
-    <div className="mx-auto max-w-[1440px] px-4 py-8 sm:px-6 lg:px-8">
+    <div className="mx-auto max-w-[1440px] px-4 py-8 sm:px-6 lg:px-8 font-[family-name:var(--font-vazir)]">
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            {categorySlug
-              ? categories.find((c) => c.slug === categorySlug)?.name ??
-                "Shop"
-              : searchQuery
-                ? `Results for "${searchQuery}"`
-                : "All Products"}
+          <h1 className="text-3xl font-bold tracking-tight text-neutral-800">
+            {pageTitle}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {pagination.total} {pagination.total === 1 ? "product" : "products"}
+            {pagination.total} محصول
           </p>
         </div>
 
@@ -94,11 +98,11 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
           href="/shop"
           className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
             !categorySlug
-              ? "border-foreground bg-foreground text-background"
-              : "border-border hover:border-foreground"
+              ? "border-green-600 bg-green-600 text-white"
+              : "border-neutral-200 hover:border-green-600 hover:text-green-600"
           }`}
         >
-          Shop All
+          همه محصولات
         </Link>
         {categories.map((cat) => {
           return (
@@ -107,8 +111,8 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
               href={`/${cat.slug}`}
               className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
                 categorySlug === cat.slug
-                  ? "border-foreground bg-foreground text-background"
-                  : "border-border hover:border-foreground"
+                  ? "border-green-600 bg-green-600 text-white"
+                  : "border-neutral-200 hover:border-green-600 hover:text-green-600"
               }`}
             >
               {cat.name}
