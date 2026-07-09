@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useRef } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { PageHeader } from "@/components/ui/page-header"
 import { EmptyState } from "@/components/ui/empty-state"
+import { PageLoader } from "@/components/ui/page-loader"
 import { MapPin, Plus, Trash2 } from "lucide-react"
 import { useAuthGuard } from "@/hooks/use-auth-guard"
 import { toast } from "sonner"
@@ -48,8 +49,10 @@ export default function AddressesPage() {
     window.scrollTo({ top: 0, behavior: "smooth" })
   }, [])
 
-  // حالا شرط خروج بعد از تمام هوک‌ها
-  if (!isReady) return null
+  // نمایش لودر تا زمانی که احراز هویت کامل نشده
+  if (!isReady) {
+    return <PageLoader isLoading={true} />
+  }
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     setForm((f) => ({ ...f, [e.target.name]: e.target.value }))
