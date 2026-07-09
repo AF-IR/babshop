@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { AuthCardLayout } from "@/components/auth/auth-card-layout"
+import { PageLoader } from "@/components/ui/page-loader"
 import { toast } from "sonner"
 import { loginSchema } from "@/lib/validators"
 import { supabase } from "@/lib/supabase"
@@ -41,35 +42,65 @@ export default function LoginPage() {
       return
     }
 
-    toast.success("Welcome back!")
-    router.refresh() // ← اضافه شد تا سشن جدید شناسایی شود
+    toast.success("خوش آمدید!")
+    router.refresh()
     router.push("/account")
+  }
+
+  if (loading) {
+    return <PageLoader isLoading={true} />
   }
 
   return (
     <AuthCardLayout
-      title="Welcome back"
-      subtitle="Sign in to your account to continue"
-      footerText="Don't have an account?"
-      footerLinkText="Sign up"
+      title="خوش آمدید"
+      subtitle="برای ادامه، وارد حساب کاربری خود شوید"
+      footerText="حساب کاربری ندارید؟"
+      footerLinkText="ثبت‌نام"
       footerLinkHref="/auth/register"
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
-          <Input id="email" type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
+          <Label htmlFor="email" className="text-sm font-bold text-neutral-700">
+            ایمیل
+          </Label>
+          <Input
+            id="email"
+            type="email"
+            placeholder="example@email.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="border-neutral-200 focus:border-green-400 focus:ring-green-200"
+            required
+          />
         </div>
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <Label htmlFor="password">Password</Label>
-            <Link href="/auth/forgot-password" className="text-xs text-muted-foreground hover:text-foreground">
-              Forgot password?
+            <Label htmlFor="password" className="text-sm font-bold text-neutral-700">
+              رمز عبور
+            </Label>
+            <Link
+              href="/auth/forgot-password"
+              className="text-xs text-green-600 transition-colors hover:text-green-700 hover:underline"
+            >
+              رمز را فراموش کرده‌اید؟
             </Link>
           </div>
-          <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+          <Input
+            id="password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="border-neutral-200 focus:border-green-400 focus:ring-green-200"
+            required
+          />
         </div>
-        <Button type="submit" className="w-full" disabled={loading}>
-          {loading ? "Signing in..." : "Sign In"}
+        <Button
+          type="submit"
+          className="w-full bg-green-600 text-white transition-colors hover:bg-green-700"
+          disabled={loading}
+        >
+          {loading ? "در حال ورود..." : "ورود"}
         </Button>
       </form>
     </AuthCardLayout>
