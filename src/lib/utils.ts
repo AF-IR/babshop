@@ -6,14 +6,25 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+/**
+ * فرمت‌سازی قیمت به صورت تومان با جداکننده هزارگان
+ * مثال: ۴۳,۲۴۰,۲۰۰ تومان
+ */
 export function formatPrice(
   priceInCents: number,
   currency?: string
 ): string {
-  return new Intl.NumberFormat(siteConfig.locale, {
-    style: "currency",
-    currency: currency ?? siteConfig.currency,
-  }).format(priceInCents / 100)
+  // تقسیم بر ۱۰۰ برای تبدیل به واحد اصلی (فرض بر این است که قیمت به سنت ذخیره شده)
+  const value = priceInCents / 100
+
+  // فرمت‌سازی با جداکننده هزارگان و بدون اعشار
+  const formatted = new Intl.NumberFormat("fa-IR", {
+    useGrouping: true,
+    maximumFractionDigits: 0,
+  }).format(value)
+
+  // اضافه کردن پسوند "تومان" (به جای کد ارز IRT)
+  return `${formatted} تومان`
 }
 
 export function formatDate(date: string | Date): string {
