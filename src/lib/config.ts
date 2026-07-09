@@ -1,20 +1,20 @@
 export const siteConfig = {
-  name: "باب شاپ",
+  name: "اارزان پلاست",
 
-  tagline: "فروشگاه تخصصی قطعات الکترونیک و تجهیزات هوشمند",
+  tagline: "فروشگاه وسایل پلاستیکی و ظروف و وسایل خانه و 3 راهی",
 
   description:
-    "خرید ESP32، آردوینو، ماژول‌ها، ابزار تعمیرات و تجهیزات الکترونیک با ارسال سریع.",
+    "مرجع لوازک خانگی، وسایل پلاستیکی، سیم های سیار و 3 راهی با بهترین قیمت، ظروف آشپزخانه، ظروف یکبار مصرف",
 
-  announcement: "ارسال سریع به سراسر ایران",
+  announcement: "خرید تک به قیمت عمده",
 
   url: process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000",
 
   contact: {
-    email: "support@babshop.ir",
-    phone: "00989010040035",
+    email: "support.arzanplast@gmail.com",
+    phone: "0098 90 100 400 35",
     address: {
-      street: "مطهری",
+      street: "خیابان وحید",
       suite: "",
       city: "اصفهان",
       state: "کوچه ویلا شرقی پلاک ۱",
@@ -30,10 +30,10 @@ export const siteConfig = {
     tiktok: "",
   },
 
-  freeShippingThreshold: 1000000,
+  freeShippingThreshold: 20000000,
   taxRate: 0,
 
-  currency: "IRR",
+  currency: "IRT",
   locale: "fa-IR",
 
   copyrightYear: new Date().getFullYear(),
