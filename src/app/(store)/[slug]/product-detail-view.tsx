@@ -76,7 +76,6 @@ export function ProductDetailView({
     })
   }, [product, addRecentlyViewed])
 
-  // ✅ اصلاح شده با استفاده از متغیر مجزا
   const selectedVariant = product.variants.find(
     (v) => v.id === selectedVariantId
   )
@@ -96,49 +95,51 @@ export function ProductDetailView({
     variant.inventory.allowBackorder
 
   async function handleAddToCart() {
-  if (isAdding || isAddingStore) return
+    if (isAdding || isAddingStore) return
 
-  setIsAdding(true)
+    setIsAdding(true)
 
-  try {
-    await addToCart({
-      productId: product.id,
-      quantity,
-      productName: product.name,
-      imageUrl: product.images[0]?.url ?? "",
-      imageAlt: product.images[0]?.alt ?? product.name,
-      slug: product.slug,
-      price: variant.price,
-    })
+    try {
+      await addToCart({
+        productId: product.id,
+        quantity,
+        productName: product.name,
+        imageUrl: product.images[0]?.url ?? "",
+        imageAlt: product.images[0]?.alt ?? product.name,
+        slug: product.slug,
+        price: variant.price,
+      })
 
-    openCart()
-    toast.success("Added to cart")
-  } catch (err: any) {
-    if (err?.message !== "NOT_AUTHENTICATED") {
-      toast.error("Failed to add to cart")
+      openCart()
+      toast.success("به سبد خرید اضافه شد")
+    } catch (err: any) {
+      if (err?.message !== "NOT_AUTHENTICATED") {
+        toast.error("افزودن به سبد خرید با خطا مواجه شد")
+      }
+
+      console.error(err)
+    } finally {
+      setIsAdding(false)
     }
-
-    console.error(err)
-  } finally {
-    setIsAdding(false)
   }
-}
+
   async function handleToggleWishlist() {
-  try {
-    if (isWishlisted) {
-      await removeFromWishlist(product.id)
-      toast.success("Removed from wishlist")
-    } else {
-      await addToWishlist(product.id)
-      toast.success("Added to wishlist")
+    try {
+      if (isWishlisted) {
+        await removeFromWishlist(product.id)
+        toast.success("از علاقه‌مندی‌ها حذف شد")
+      } else {
+        await addToWishlist(product.id)
+        toast.success("به علاقه‌مندی‌ها اضافه شد")
+      }
+    } catch (err) {
+      console.error(err)
+      toast.error("عملیات ناموفق بود")
     }
-  } catch (err) {
-    console.error(err)
-    toast.error("Operation failed")
   }
-}
+
   const breadcrumbLd = breadcrumbJsonLd([
-    { name: "Shop", href: "/shop" },
+    { name: "فروشگاه", href: "/shop" },
     ...categoryAncestors.map((c) => ({ name: c.name, href: `/${c.slug}` })),
     { name: product.name, href: `/${product.slug}` },
   ])
@@ -169,7 +170,7 @@ export function ProductDetailView({
   const sanitizedBody = product.body ?? ""
 
   return (
-    <div className="mx-auto max-w-[1440px] px-4 py-8 sm:px-6 lg:px-8">
+    <div className="mx-auto max-w-[1440px] px-4 py-8 sm:px-6 lg:px-8 font-[family-name:var(--font-vazir)]">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify([jsonLd, breadcrumbLd]) }}
@@ -177,7 +178,7 @@ export function ProductDetailView({
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
-            <BreadcrumbLink render={<Link href="/shop" />}>Shop</BreadcrumbLink>
+            <BreadcrumbLink render={<Link href="/shop" />}>فروشگاه</BreadcrumbLink>
           </BreadcrumbItem>
           {categoryAncestors.map((cat) => {
             const key = cat.id ?? cat.slug
@@ -203,21 +204,21 @@ export function ProductDetailView({
             <StarRating rating={product.rating} reviewCount={product.reviewCount} />
           </div>
 
-          <h1 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">
+          <h1 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl text-neutral-800">
             {product.name}
           </h1>
 
           {brand && (
             <Link
               href={`/${brand.slug}`}
-              className="mt-1 text-sm text-muted-foreground hover:text-foreground hover:underline"
+              className="mt-1 text-sm text-muted-foreground hover:text-green-600 hover:underline transition-colors"
             >
               {brand.name}
             </Link>
           )}
 
           <div className="mt-4 flex items-center gap-3">
-            <span className="text-2xl font-semibold">
+            <span className="text-2xl font-bold text-green-700">
               {formatPrice(variant.price, variant.currency)}
             </span>
             {isOnSale && (
@@ -228,14 +229,14 @@ export function ProductDetailView({
                     variant.currency
                   )}
                 </span>
-                <Badge variant="secondary">
+                <Badge className="bg-green-600 text-white border-0">
                   {Math.round(
                     (1 -
                       variant.price /
                         variant.compareAtPrice!) *
                       100
                   )}
-                  % off
+                  % تخفیف
                 </Badge>
               </>
             )}
@@ -263,30 +264,31 @@ export function ProductDetailView({
               <Button
                 variant="outline"
                 size="icon"
-                aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
+                aria-label={isWishlisted ? "حذف از علاقه‌مندی‌ها" : "افزودن به علاقه‌مندی‌ها"}
                 onClick={handleToggleWishlist}
+                className="border-neutral-200 hover:border-green-500 hover:text-green-600 hover:bg-green-50"
               >
-                <Heart className={`h-4 w-4 ${isWishlisted ? "fill-wishlist text-wishlist" : ""}`} />
+                <Heart className={`h-4 w-4 ${isWishlisted ? "fill-current text-green-600" : ""}`} />
               </Button>
             </div>
             <Button
               size="lg"
-              className="w-full sm:flex-1"
+              className="w-full sm:flex-1 bg-green-600 hover:bg-green-700 text-white"
               disabled={!inStock || isAdding || isAddingStore}
               onClick={handleAddToCart}
             >
-              <ShoppingBag className="mr-2 h-4 w-4" />
+              <ShoppingBag className="ml-2 h-4 w-4" />
               {isAdding || isAddingStore
-                ? "Adding..."
+                ? "در حال افزودن..."
                 : inStock
-                ? "Add to Cart"
-                : "Out of Stock"}
+                ? "افزودن به سبد خرید"
+                : "ناموجود"}
             </Button>
           </div>
 
           {!inStock && (
-            <p className="mt-2 text-sm text-destructive">
-              This item is currently out of stock.
+            <p className="mt-2 text-sm text-red-500">
+              این کالا در حال حاضر ناموجود است.
             </p>
           )}
 
@@ -309,8 +311,8 @@ export function ProductDetailView({
 
       {relatedProducts.length > 0 && (
         <section className="mt-16">
-          <h2 className="text-xl font-bold tracking-tight">
-            You may also like
+          <h2 className="text-xl font-bold tracking-tight text-neutral-800">
+            محصولات مشابه
           </h2>
           <div className="mt-6">
             <ProductGrid products={relatedProducts} />
