@@ -59,23 +59,23 @@ export function Header({ categories = [] }: HeaderProps) {
     router.push("/")
   }
 
-  // آیتم‌های ویژه (داخلی)
+  // آیتم‌های ویژه (داخلی) - با رنگ سبز
   const specialItems = [
-    { name: "شگفت‌انگیزها", href: "/discounts", icon: <Percent className="h-4 w-4 text-red-500" /> },
+    { name: "شگفت‌انگیزها", href: "/discounts", icon: <Percent className="h-4 w-4 text-green-500" /> },
     { name: "پرفروش‌ترین‌ها", href: "/bestsellers", icon: <Flame className="h-4 w-4 text-orange-500" /> },
     { name: "تخفیف‌های ویژه", href: "/specials", icon: <Gift className="h-4 w-4 text-green-500" /> },
   ]
 
-  // حداکثر ۵ دسته‌بندی برای نمایش در نوار ناوبری
-  const topCategories = categories.slice(0, 6)
+  // فقط ۴ دسته‌بندی اول برای نمایش در نوار ناوبری (جلوگیری از شلوغی)
+  const topCategories = categories.slice(0, 4)
 
   return (
     <>
       <header className="sticky top-0 z-50 w-full bg-white border-b border-neutral-200/80 shadow-sm">
         <div className="mx-auto flex max-w-[1440px] flex-col px-4 sm:px-6 lg:px-8">
           
-          {/* ===== ردیف اول: لوگو، جستجو، دکمه‌ها ===== */}
-          <div className="flex h-16 items-center justify-between gap-4 md:gap-8 pt-2">
+          {/* ===== ردیف اول: لوگو، جستجو، دکمه‌ها (فشرده‌تر) ===== */}
+          <div className="flex h-14 items-center justify-between gap-4 md:gap-6">
             
             {/* سمت راست: منوی موبایل + لوگو */}
             <div className="flex items-center gap-2">
@@ -90,7 +90,7 @@ export function Header({ categories = [] }: HeaderProps) {
                   <div className="flex h-full flex-col overflow-y-auto bg-white">
                     {/* هدر منو */}
                     <div className="flex items-center justify-between border-b border-neutral-100 px-4 py-3">
-                      <Link href="/" onClick={() => setMobileMenuOpen(false)} className="text-xl font-bold text-red-600">
+                      <Link href="/" onClick={() => setMobileMenuOpen(false)} className="text-xl font-bold text-green-600">
                         {siteConfig.name}
                       </Link>
                       <button
@@ -116,7 +116,7 @@ export function Header({ categories = [] }: HeaderProps) {
                                 <Link
                                   href={`/category/${cat.slug}`}
                                   onClick={() => setMobileMenuOpen(false)}
-                                  className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-neutral-700 hover:bg-red-50 hover:text-red-600 transition-colors"
+                                  className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-neutral-700 hover:bg-green-50 hover:text-green-600 transition-colors"
                                 >
                                   {cat.name}
                                 </Link>
@@ -129,7 +129,7 @@ export function Header({ categories = [] }: HeaderProps) {
                             <Link
                               href="/shop"
                               onClick={() => setMobileMenuOpen(false)}
-                              className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
+                              className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-green-600 hover:bg-green-50 transition-colors"
                             >
                               مشاهده همه دسته‌ها
                             </Link>
@@ -146,7 +146,7 @@ export function Header({ categories = [] }: HeaderProps) {
                               <Link
                                 href={item.href}
                                 onClick={() => setMobileMenuOpen(false)}
-                                className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-neutral-700 hover:bg-red-50 hover:text-red-600 transition-colors"
+                                className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-neutral-700 hover:bg-green-50 hover:text-green-600 transition-colors"
                               >
                                 {item.icon}
                                 {item.name}
@@ -161,17 +161,17 @@ export function Header({ categories = [] }: HeaderProps) {
                         <h3 className="mb-2 text-sm font-bold text-neutral-500">خدمات مشتریان</h3>
                         <ul className="space-y-1">
                           <li>
-                            <Link href="/account/orders" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-neutral-700 hover:bg-red-50 hover:text-red-600">
+                            <Link href="/account/orders" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-neutral-700 hover:bg-green-50 hover:text-green-600">
                               پیگیری سفارش
                             </Link>
                           </li>
                           <li>
-                            <Link href="/policies/returns" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-neutral-700 hover:bg-red-50 hover:text-red-600">
+                            <Link href="/policies/returns" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-neutral-700 hover:bg-green-50 hover:text-green-600">
                               شرایط بازگشت کالا
                             </Link>
                           </li>
                           <li>
-                            <Link href="/faq" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-neutral-700 hover:bg-red-50 hover:text-red-600">
+                            <Link href="/faq" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-neutral-700 hover:bg-green-50 hover:text-green-600">
                               راهنمای خرید
                             </Link>
                           </li>
@@ -184,7 +184,7 @@ export function Header({ categories = [] }: HeaderProps) {
                         {mounted && isAuthenticated ? (
                           <>
                             <div className="flex items-center gap-3 rounded-lg bg-neutral-50 px-3 py-3 mb-2">
-                              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-100 text-red-600 font-bold">
+                              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100 text-green-600 font-bold">
                                 {user?.firstName?.[0]}{user?.lastName?.[0]}
                               </div>
                               <div>
@@ -192,18 +192,18 @@ export function Header({ categories = [] }: HeaderProps) {
                                 <p className="text-xs text-neutral-500 truncate">{user?.email}</p>
                               </div>
                             </div>
-                            <Link href="/account" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-red-50 hover:text-red-600">
+                            <Link href="/account" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-green-50 hover:text-green-600">
                               <User className="h-5 w-5" /> پروفایل من
                             </Link>
-                            <Link href="/account/orders" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-red-50 hover:text-red-600">
+                            <Link href="/account/orders" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-green-50 hover:text-green-600">
                               سفارش‌های من
                             </Link>
-                            <button onClick={() => { setMobileMenuOpen(false); handleLogout(); }} className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors">
+                            <button onClick={() => { setMobileMenuOpen(false); handleLogout(); }} className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-green-600 hover:bg-green-50 transition-colors">
                               <LogOut className="h-5 w-5" /> خروج
                             </button>
                           </>
                         ) : (
-                          <Link href="/auth/login" onClick={() => setMobileMenuOpen(false)} className="flex w-full items-center justify-center rounded-lg bg-red-600 px-4 py-3 text-sm font-bold text-white hover:bg-red-700 transition-colors">
+                          <Link href="/auth/login" onClick={() => setMobileMenuOpen(false)} className="flex w-full items-center justify-center rounded-lg bg-green-600 px-4 py-3 text-sm font-bold text-white hover:bg-green-700 transition-colors">
                             ورود | ثبت‌نام
                           </Link>
                         )}
@@ -213,25 +213,25 @@ export function Header({ categories = [] }: HeaderProps) {
                     {/* فوتر منو */}
                     <div className="border-t border-neutral-100 px-4 py-3 bg-neutral-50">
                       <div className="flex flex-wrap items-center gap-4 text-xs text-neutral-500">
-                        <Link href="/policies/privacy" className="hover:text-red-600">حریم خصوصی</Link>
-                        <Link href="/policies/terms" className="hover:text-red-600">قوانین</Link>
-                        <Link href="/contact" className="hover:text-red-600">تماس با ما</Link>
+                        <Link href="/policies/privacy" className="hover:text-green-600">حریم خصوصی</Link>
+                        <Link href="/policies/terms" className="hover:text-green-600">قوانین</Link>
+                        <Link href="/contact" className="hover:text-green-600">تماس با ما</Link>
                       </div>
                     </div>
                   </div>
                 </SheetContent>
               </Sheet>
 
-              <Link href="/" className="text-2xl font-bold text-red-600 tracking-tight hover:opacity-80 transition-opacity">
+              <Link href="/" className="text-2xl font-bold text-green-600 tracking-tight hover:opacity-80 transition-opacity">
                 {siteConfig.name}
               </Link>
             </div>
 
             {/* ===== نوار جستجوی دسکتاپ ===== */}
-            <div className="hidden flex-1 max-w-2xl lg:flex">
+            <div className="hidden flex-1 max-w-xl lg:flex">
               <button
                 onClick={() => setSearchOpen(true)}
-                className="flex w-full items-center rounded-full bg-neutral-100 px-5 py-2.5 text-sm text-neutral-500 transition-all hover:bg-neutral-200 hover:shadow-inner"
+                className="flex w-full items-center rounded-full bg-neutral-100 px-4 py-2 text-sm text-neutral-500 transition-all hover:bg-neutral-200 hover:shadow-inner"
               >
                 <Search className="ml-3 h-5 w-5 text-neutral-400" />
                 <span>جستجو در میان هزاران کالا...</span>
@@ -245,7 +245,7 @@ export function Header({ categories = [] }: HeaderProps) {
             <div className="flex items-center gap-1 sm:gap-2">
               <Link
                 href="/wishlist"
-                className="hidden sm:flex h-10 w-10 items-center justify-center rounded-full hover:bg-neutral-100 transition-colors"
+                className="hidden sm:flex h-9 w-9 items-center justify-center rounded-full hover:bg-neutral-100 transition-colors"
                 aria-label="علاقه‌مندی‌ها"
               >
                 <Heart className="h-5 w-5 text-neutral-600" />
@@ -253,7 +253,7 @@ export function Header({ categories = [] }: HeaderProps) {
 
               {mounted && isAuthenticated ? (
                 <DropdownMenu>
-                  <DropdownMenuTrigger className="flex h-10 items-center gap-2 rounded-full border border-neutral-200 px-3 hover:bg-neutral-50 transition-colors">
+                  <DropdownMenuTrigger className="flex h-9 items-center gap-2 rounded-full border border-neutral-200 px-3 hover:bg-neutral-50 transition-colors">
                     <User className="h-5 w-5 text-neutral-600" />
                     <ChevronDown className="h-4 w-4 text-neutral-400" />
                   </DropdownMenuTrigger>
@@ -269,7 +269,7 @@ export function Header({ categories = [] }: HeaderProps) {
                       سفارش‌های من
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-red-600 rounded-lg hover:bg-red-50">
+                    <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-green-600 rounded-lg hover:bg-green-50">
                       <LogOut className="mr-2 h-4 w-4" /> خروج
                     </DropdownMenuItem>
                   </DropdownMenuContent>
@@ -277,7 +277,7 @@ export function Header({ categories = [] }: HeaderProps) {
               ) : (
                 <Link
                   href="/auth/login"
-                  className="flex h-10 items-center gap-2 rounded-full border border-neutral-200 px-4 text-sm font-medium hover:bg-neutral-50 transition-colors"
+                  className="flex h-9 items-center gap-2 rounded-full border border-neutral-200 px-4 text-sm font-medium hover:bg-neutral-50 transition-colors"
                 >
                   <User className="h-5 w-5" />
                   <span className="hidden sm:inline-block">ورود | ثبت‌نام</span>
@@ -286,12 +286,12 @@ export function Header({ categories = [] }: HeaderProps) {
 
               <button
                 onClick={openCart}
-                className="relative flex h-10 w-10 items-center justify-center rounded-full hover:bg-neutral-100 transition-colors"
+                className="relative flex h-9 w-9 items-center justify-center rounded-full hover:bg-neutral-100 transition-colors"
                 aria-label="سبد خرید"
               >
                 <ShoppingBag className="h-5 w-5 text-neutral-700" />
                 {itemCount > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-[10px] font-bold text-white shadow-sm border-2 border-white">
+                  <span className="absolute -top-0.5 -right-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-green-600 text-[10px] font-bold text-white shadow-sm border-2 border-white">
                     {itemCount > 9 ? "9+" : itemCount}
                   </span>
                 )}
@@ -300,7 +300,7 @@ export function Header({ categories = [] }: HeaderProps) {
           </div>
 
           {/* ===== نوار جستجوی موبایل ===== */}
-          <div className="flex pb-3 lg:hidden mt-2">
+          <div className="flex pb-2 lg:hidden">
             <button
               onClick={() => setSearchOpen(true)}
               className="flex w-full items-center rounded-full bg-neutral-100 px-4 py-2 text-sm text-neutral-500 hover:bg-neutral-200 transition-colors"
@@ -310,68 +310,68 @@ export function Header({ categories = [] }: HeaderProps) {
             </button>
           </div>
 
-          {/* ===== منوی ناوبری دسکتاپ (با دسته‌بندی‌ها) ===== */}
-          <nav className="hidden lg:flex items-center gap-4 pb-3 text-sm font-medium text-neutral-600 mt-1 overflow-x-auto scrollbar-hide">
+          {/* ===== منوی ناوبری دسکتاپ (جمع‌وجور و بدون اسکرول) ===== */}
+          <nav className="hidden lg:flex flex-wrap items-center gap-1.5 pb-2 text-xs font-medium text-neutral-600">
             
             {/* دکمه دسته‌بندی کشویی */}
             <div className="group relative shrink-0">
-              <button className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 hover:bg-neutral-100 transition-colors">
-                <Menu className="h-4 w-4" />
-                <span>دسته‌بندی کالاها</span>
-                <ChevronDown className="h-3.5 w-3.5 opacity-70" />
+              <button className="flex items-center gap-1 rounded-lg px-2.5 py-1 hover:bg-neutral-100 transition-colors">
+                <Menu className="h-3.5 w-3.5" />
+                <span>دسته‌بندی</span>
+                <ChevronDown className="h-3 w-3 opacity-70" />
               </button>
               <div className="absolute right-0 top-full mt-1 w-56 rounded-xl bg-white shadow-lg border border-neutral-100 p-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
                 {categories.length > 0 ? (
-                  categories.slice(0, 10).map((cat) => (
-                    <Link key={cat.id} href={`/category/${cat.slug}`} className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-neutral-700 hover:bg-red-50 hover:text-red-600 transition-colors">
+                  categories.slice(0, 12).map((cat) => (
+                    <Link key={cat.id} href={`/category/${cat.slug}`} className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-neutral-700 hover:bg-green-50 hover:text-green-600 transition-colors">
                       {cat.name}
                     </Link>
                   ))
                 ) : (
                   <div className="px-3 py-2 text-sm text-neutral-500">دسته‌بندی موجود نیست</div>
                 )}
-                <Link href="/shop" className="mt-1 block rounded-lg bg-neutral-100 px-3 py-2 text-center text-sm font-medium text-red-600 hover:bg-red-50 transition-colors">
+                <Link href="/shop" className="mt-1 block rounded-lg bg-neutral-100 px-3 py-2 text-center text-sm font-medium text-green-600 hover:bg-green-50 transition-colors">
                   مشاهده همه دسته‌ها
                 </Link>
               </div>
             </div>
 
-            {/* ===== نمایش افقی دسته‌بندی‌های اصلی (مثل دیجی‌کالا) ===== */}
+            {/* ===== نمایش افقی حداکثر ۴ دسته‌بندی ===== */}
             {topCategories.map((cat) => (
               <Link
                 key={cat.id}
                 href={`/category/${cat.slug}`}
-                className="shrink-0 hover:text-red-600 transition-colors px-1 py-1 border-b-2 border-transparent hover:border-red-500"
+                className="shrink-0 hover:text-green-600 transition-colors px-1.5 py-0.5 border-b border-transparent hover:border-green-500"
               >
                 {cat.name}
               </Link>
             ))}
 
-            {/* اگر دسته‌بندی زیاد باشد، یک «...» برای مشاهده همه */}
-            {categories.length > 6 && (
+            {/* اگر دسته‌بندی زیاد باشد، «...» برای مشاهده همه */}
+            {categories.length > 4 && (
               <Link
                 href="/shop"
-                className="shrink-0 text-neutral-400 hover:text-red-600 transition-colors"
+                className="shrink-0 text-neutral-400 hover:text-green-600 transition-colors px-1"
               >
                 ...
               </Link>
             )}
 
-            <span className="h-5 w-px bg-neutral-300 shrink-0"></span>
+            <span className="h-4 w-px bg-neutral-300 shrink-0"></span>
 
             {/* آیتم‌های ویژه */}
             {specialItems.map((item) => (
-              <Link key={item.href} href={item.href} className="flex items-center gap-1.5 shrink-0 hover:text-red-600 transition-colors">
+              <Link key={item.href} href={item.href} className="flex items-center gap-1 shrink-0 hover:text-green-600 transition-colors px-1.5 py-0.5">
                 {item.icon}
                 <span>{item.name}</span>
               </Link>
             ))}
 
-            <span className="h-5 w-px bg-neutral-300 shrink-0"></span>
+            <span className="h-4 w-px bg-neutral-300 shrink-0"></span>
 
             {/* لینک‌های فروشگاه (به جز خانه) */}
             {shopLinks.filter(link => link.name !== "خانه").map((item) => (
-              <Link key={item.href} href={item.href} className="shrink-0 hover:text-red-600 transition-colors">
+              <Link key={item.href} href={item.href} className="shrink-0 hover:text-green-600 transition-colors px-1.5 py-0.5">
                 {item.name}
               </Link>
             ))}
