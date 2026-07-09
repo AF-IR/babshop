@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { Heart } from "lucide-react"
 import { PageHeader } from "@/components/ui/page-header"
 import { EmptyState } from "@/components/ui/empty-state"
+import { PageLoader } from "@/components/ui/page-loader"
 import { ProductCard } from "@/components/products/product-card"
 import { useWishlistStore } from "@/store/wishlist"
 import type { Product } from "@/types"
@@ -26,12 +27,13 @@ export default function WishlistClient({ products }: Props) {
     init()
   }, [loadWishlist])
 
+  // اسکرول به بالای صفحه بعد از رفرش
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" })
+  }, [])
+
   if (!mounted) {
-    return (
-      <div className="mx-auto max-w-3xl px-4 py-16">
-        <PageHeader title="Wishlist" />
-      </div>
-    )
+    return <PageLoader isLoading={true} />
   }
 
   const wishlistedProducts = products.filter((p) =>
@@ -40,13 +42,13 @@ export default function WishlistClient({ products }: Props) {
 
   if (wishlistedProducts.length === 0) {
     return (
-      <div className="mx-auto max-w-3xl px-4 py-16">
-        <PageHeader title="Wishlist" />
+      <div className="mx-auto max-w-3xl px-4 py-16 font-[family-name:var(--font-vazir)]">
+        <PageHeader title="علاقه‌مندی‌ها" />
         <EmptyState
           icon={Heart}
-          title="Your wishlist is empty"
-          description="Save products you love to find them easily later."
-          actionLabel="Browse Products"
+          title="لیست علاقه‌مندی‌ها خالی است"
+          description="محصولاتی که دوست دارید را ذخیره کنید تا بعداً به راحتی پیدا کنید."
+          actionLabel="مشاهده محصولات"
           actionHref="/shop"
         />
       </div>
@@ -54,10 +56,10 @@ export default function WishlistClient({ products }: Props) {
   }
 
   return (
-    <div className="mx-auto max-w-[1440px] px-4 py-16">
+    <div className="mx-auto max-w-[1440px] px-4 py-16 font-[family-name:var(--font-vazir)]">
       <PageHeader
-        title="Wishlist"
-        description={`${wishlistedProducts.length} item${wishlistedProducts.length > 1 ? "s" : ""}`}
+        title="علاقه‌مندی‌ها"
+        description={`${wishlistedProducts.length} محصول`}
       />
 
       <div className="mt-8 grid grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-3 lg:grid-cols-4">
