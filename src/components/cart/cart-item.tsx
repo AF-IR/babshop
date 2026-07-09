@@ -28,7 +28,7 @@ export function CartItem({ item }: CartItemProps) {
   )
 
   return (
-    <div className="flex gap-4 py-4">
+    <div className="flex gap-4 py-4 font-[family-name:var(--font-vazir)]">
 
       <Link
         href={`/${item.slug}`}
@@ -52,13 +52,13 @@ export function CartItem({ item }: CartItemProps) {
 
             <Link
               href={`/${item.slug}`}
-              className="block truncate text-sm font-medium hover:underline"
+              className="block truncate text-sm font-medium text-neutral-800 hover:text-green-600 hover:underline"
             >
               {item.name}
             </Link>
 
             <p className="text-xs text-muted-foreground">
-              {formatPrice(item.price)} each
+              {formatPrice(item.price)} هر عدد
             </p>
 
           </div>
@@ -66,9 +66,9 @@ export function CartItem({ item }: CartItemProps) {
           <Button
             variant="ghost"
             size="icon"
-            className="h-6 w-6"
+            className="h-6 w-6 text-neutral-400 hover:text-red-600 hover:bg-red-50"
             onClick={() => removeItem(item.productId)}
-            aria-label="Remove item"
+            aria-label="حذف کالا"
           >
             <X className="h-3 w-3" />
           </Button>
@@ -84,7 +84,7 @@ export function CartItem({ item }: CartItemProps) {
             }
           />
 
-          <span className="shrink-0 text-sm font-medium tabular-nums">
+          <span className="shrink-0 text-sm font-bold text-green-700 tabular-nums">
             {formatPrice(item.lineTotal)}
           </span>
 
