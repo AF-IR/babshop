@@ -60,21 +60,21 @@ export function Footer() {
               {siteConfig.name}
             </Link>
             <p className="mt-3 text-sm leading-relaxed text-neutral-500 max-w-sm">
-              {siteConfig.tagline || "بهترین‌ها را با بهترین قیمت از باب‌شاپ تهیه کنید."}
+              {siteConfig.tagline || "بهترین‌ها را با بهترین قیمت از ارزان‌پلاست تهیه کنید."}
             </p>
             <div className="mt-4 flex items-center gap-3 text-sm text-neutral-500">
               <Phone className="h-4 w-4" />
-              <span dir="ltr">۰۲۱-۱۲۳۴-۵۶۷۸</span>
+              <span dir="ltr">۰۳۱-۳۲۳۴-۸۶۱۶/09010040035</span>
             </div>
             <div className="mt-1 flex items-center gap-3 text-sm text-neutral-500">
               <Mail className="h-4 w-4" />
               <a href="mailto:info@babshop.ir" className="hover:text-red-600 transition-colors">
-                info@babshop.ir
+                support.arzanplast@gmail.com
               </a>
             </div>
             <div className="mt-1 flex items-center gap-3 text-sm text-neutral-500">
               <MapPin className="h-4 w-4" />
-              <span>تهران، خیابان ولیعصر، پلاک ۱۲۳</span>
+              <span>اصفهان، پل‌وحید خیابان‌وحید پلاک ۳۴</span>
             </div>
           </div>
 
