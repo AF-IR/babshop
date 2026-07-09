@@ -2,14 +2,18 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
+import { MapPin, Truck, CreditCard, Wallet, ShoppingBag, Check, ChevronLeft } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { PageLoader } from "@/components/ui/page-loader"
 
 import { loadCheckoutCart } from "@/lib/checkout/cart"
 import { getAddresses } from "@/lib/addresses"
 import { getShippingMethods, type ShippingMethod } from "@/lib/shipping"
 import { createOrder } from "@/lib/orders/create-order"
+import { formatPrice } from "@/lib/utils"
 
 import { useUser } from "@/hooks/use-user"
 
@@ -70,7 +74,6 @@ export default function CheckoutPage() {
     loadData()
   }, [userLoading, isAuthenticated, router])
 
-  // ✅ تابع handlePayment اصلاح‌شده با درخواست به API پرداخت
   const handlePayment = async () => {
     if (!selectedAddressId) {
       alert("لطفا آدرس را انتخاب کنید.")
@@ -85,15 +88,8 @@ export default function CheckoutPage() {
     try {
       setCreatingOrder(true)
 
-      // ۱. ثبت سفارش در دیتابیس
-      const order = await createOrder(
-        selectedAddressId,
-        selectedShippingId
-      )
+      const order = await createOrder(selectedAddressId, selectedShippingId)
 
-      console.log("سفارش ثبت شد:", order)
-
-      // ۲. درخواست به API پرداخت برای دریافت لینک زرین‌پال
       const response = await fetch("/api/payment/request", {
         method: "POST",
         headers: {
@@ -105,14 +101,11 @@ export default function CheckoutPage() {
       })
 
       const data = await response.json()
-      console.log("STATUS:", response.status)
-      console.log("PAYMENT RESPONSE:", data)
 
       if (!response.ok) {
         throw new Error(data.error || "خطا در ایجاد پرداخت")
       }
 
-      // ۳. هدایت کاربر به درگاه زرین‌پال
       if (data.redirectUrl) {
         window.location.href = data.redirectUrl
       } else {
@@ -126,15 +119,18 @@ export default function CheckoutPage() {
     }
   }
 
+  // نمایش لودر
   if (userLoading || loading) {
-    return <div className="container py-10 text-center">در حال بارگذاری اطلاعات...</div>
+    return <PageLoader isLoading={true} />
   }
 
   if (!cart || cart.items.length === 0) {
     return (
-      <div className="container py-10 text-center">
-        <h2 className="text-2xl font-bold">سبد خرید شما خالی است</h2>
-        <Button className="mt-4" onClick={() => router.push("/")}>
+      <div className="container mx-auto max-w-6xl py-20 text-center font-[family-name:var(--font-vazir)]">
+        <ShoppingBag className="mx-auto h-20 w-20 text-neutral-300" />
+        <h2 className="mt-4 text-2xl font-bold text-neutral-800">سبد خرید شما خالی است</h2>
+        <p className="mt-2 text-neutral-500">برای ادامه خرید، به فروشگاه بازگردید.</p>
+        <Button className="mt-6 bg-green-600 hover:bg-green-700 text-white px-8" onClick={() => router.push("/")}>
           بازگشت به فروشگاه
         </Button>
       </div>
@@ -142,44 +138,70 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="container mx-auto max-w-6xl py-10">
-      <h1 className="text-3xl font-bold mb-8">تسویه حساب</h1>
+    <div className="container mx-auto max-w-6xl py-8 px-4 sm:py-10 font-[family-name:var(--font-vazir)]">
+      <div className="flex items-center gap-3 mb-8">
+        <h1 className="text-3xl sm:text-4xl font-extrabold text-neutral-800">تسویه حساب</h1>
+        <Badge className="bg-green-600 text-white text-sm px-3 py-1">
+          {cart.items.length} کالا
+        </Badge>
+      </div>
 
-      <div className="flex items-center justify-center gap-4 mb-8">
-        {[1, 2, 3].map((s) => (
-          <div key={s} className="flex items-center">
+      {/* ===== استپ‌های مراحل ===== */}
+      <div className="flex items-center justify-center gap-2 sm:gap-4 mb-10">
+        {[
+          { id: 1, label: "آدرس", icon: MapPin },
+          { id: 2, label: "ارسال", icon: Truck },
+          { id: 3, label: "پرداخت", icon: CreditCard },
+        ].map((s, index) => (
+          <div key={s.id} className="flex items-center">
             <div
-              className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ${
-                s === step
-                  ? "bg-primary text-primary-foreground"
-                  : s < step
+              className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-bold transition-all ${
+                s.id === step
+                  ? "bg-green-600 text-white shadow-lg shadow-green-200"
+                  : s.id < step
                   ? "bg-green-500 text-white"
-                  : "bg-muted text-muted-foreground"
+                  : "bg-neutral-100 text-neutral-400"
               }`}
             >
-              {s}
+              {s.id < step ? (
+                <Check className="h-4 w-4" />
+              ) : (
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white/20 text-xs">
+                  {s.id}
+                </span>
+              )}
+              <span className="hidden sm:inline">{s.label}</span>
             </div>
-            {s < 3 && (
+            {index < 2 && (
               <div
-                className={`w-16 h-0.5 mx-2 ${s < step ? "bg-green-500" : "bg-muted"}`}
+                className={`h-0.5 w-8 sm:w-16 ${
+                  s.id < step ? "bg-green-500" : "bg-neutral-200"
+                }`}
               />
             )}
           </div>
         ))}
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-8">
+      <div className="grid lg:grid-cols-3 gap-6 lg:gap-8">
+        {/* ===== ستون اصلی ===== */}
         <div className="lg:col-span-2 space-y-6">
+          
           {/* مرحله ۱: آدرس */}
-          <Card className={step !== 1 ? "opacity-60" : ""}>
-            <CardHeader>
-              <CardTitle>انتخاب آدرس تحویل</CardTitle>
+          <Card className={`border-2 transition-all ${
+            step === 1 ? "border-green-200 shadow-lg shadow-green-50" : "border-neutral-100"
+          }`}>
+            <CardHeader className="bg-gradient-to-r from-green-50 to-white rounded-t-xl">
+              <CardTitle className="flex items-center gap-2 text-lg text-neutral-800">
+                <MapPin className="h-5 w-5 text-green-600" />
+                انتخاب آدرس تحویل
+              </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-6">
               {addresses.length === 0 ? (
-                <div className="space-y-4">
-                  <p className="text-muted-foreground">هیچ آدرسی ثبت نشده است.</p>
-                  <Button onClick={() => router.push("/account/addresses")}>
+                <div className="space-y-4 text-center py-6">
+                  <p className="text-neutral-500">هیچ آدرسی ثبت نشده است.</p>
+                  <Button onClick={() => router.push("/account/addresses")} className="bg-green-600 hover:bg-green-700 text-white">
                     افزودن آدرس جدید
                   </Button>
                 </div>
@@ -188,10 +210,10 @@ export default function CheckoutPage() {
                   {addresses.map((address) => (
                     <label
                       key={address.id}
-                      className={`flex items-start gap-3 border rounded-lg p-4 cursor-pointer transition ${
+                      className={`flex items-start gap-3 border-2 rounded-xl p-4 cursor-pointer transition-all ${
                         selectedAddressId === address.id
-                          ? "border-primary bg-primary/5"
-                          : "hover:bg-muted/50"
+                          ? "border-green-500 bg-green-50 shadow-sm"
+                          : "border-neutral-200 hover:border-green-200 hover:bg-neutral-50"
                       }`}
                     >
                       <input
@@ -199,14 +221,17 @@ export default function CheckoutPage() {
                         name="address"
                         checked={selectedAddressId === address.id}
                         onChange={() => setSelectedAddressId(address.id)}
-                        className="mt-1"
+                        className="mt-1 h-4 w-4 text-green-600 focus:ring-green-500"
                       />
-                      <div>
-                        <div className="font-medium">
+                      <div className="flex-1">
+                        <div className="font-bold text-neutral-800">
                           {address.firstName} {address.lastName}
+                          {address.isDefault && (
+                            <Badge className="mr-2 bg-green-500 text-white text-xs">پیش‌فرض</Badge>
+                          )}
                         </div>
-                        <div className="text-sm">{address.line1}</div>
-                        <div className="text-sm">{address.city}</div>
+                        <div className="text-sm text-neutral-600">{address.line1}</div>
+                        <div className="text-sm text-neutral-500">{address.city}</div>
                       </div>
                     </label>
                   ))}
@@ -214,158 +239,188 @@ export default function CheckoutPage() {
               )}
               {step === 1 && (
                 <Button
-                  className="w-full mt-6"
+                  className="w-full mt-6 bg-green-600 hover:bg-green-700 text-white text-base py-6"
                   disabled={!selectedAddressId}
                   onClick={() => setStep(2)}
                 >
-                  ادامه
+                  ادامه <ChevronLeft className="mr-2 h-5 w-5" />
                 </Button>
               )}
             </CardContent>
           </Card>
 
           {/* مرحله ۲: روش ارسال */}
-          <Card className={step !== 2 ? "opacity-60" : ""}>
-            <CardHeader>
-              <CardTitle>روش ارسال</CardTitle>
+          <Card className={`border-2 transition-all ${
+            step === 2 ? "border-green-200 shadow-lg shadow-green-50" : "border-neutral-100"
+          }`}>
+            <CardHeader className="bg-gradient-to-r from-green-50 to-white rounded-t-xl">
+              <CardTitle className="flex items-center gap-2 text-lg text-neutral-800">
+                <Truck className="h-5 w-5 text-green-600" />
+                روش ارسال
+              </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="pt-6">
               {shippingMethods.length === 0 ? (
-                <p className="text-muted-foreground">هیچ روش ارسالی فعال نیست.</p>
+                <p className="text-neutral-500 text-center py-6">هیچ روش ارسالی فعال نیست.</p>
               ) : (
-                shippingMethods.map((method) => (
-                  <label
-                    key={method.id}
-                    className={`flex items-center justify-between border rounded-lg p-4 cursor-pointer transition ${
-                      selectedShippingId === method.id
-                        ? "border-primary bg-primary/5"
-                        : "hover:bg-muted/50"
-                    }`}
-                  >
-                    <div>
-                      <p className="font-medium">{method.title}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {method.description ?? "ارسال استاندارد"}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <span className="font-semibold">
-                        {method.price.toLocaleString()} ریال
-                      </span>
-                      <input
-                        type="radio"
-                        name="shipping"
-                        checked={selectedShippingId === method.id}
-                        onChange={() => setSelectedShippingId(method.id)}
-                      />
-                    </div>
-                  </label>
-                ))
+                <div className="space-y-3">
+                  {shippingMethods.map((method) => (
+                    <label
+                      key={method.id}
+                      className={`flex items-center justify-between border-2 rounded-xl p-4 cursor-pointer transition-all ${
+                        selectedShippingId === method.id
+                          ? "border-green-500 bg-green-50 shadow-sm"
+                          : "border-neutral-200 hover:border-green-200 hover:bg-neutral-50"
+                      }`}
+                    >
+                      <div>
+                        <p className="font-bold text-neutral-800">{method.title}</p>
+                        <p className="text-sm text-neutral-500">
+                          {method.description ?? "ارسال استاندارد"}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <span className="font-bold text-green-700 text-lg">
+                          {method.price.toLocaleString()} تومان
+                        </span>
+                        <input
+                          type="radio"
+                          name="shipping"
+                          checked={selectedShippingId === method.id}
+                          onChange={() => setSelectedShippingId(method.id)}
+                          className="h-4 w-4 text-green-600 focus:ring-green-500"
+                        />
+                      </div>
+                    </label>
+                  ))}
+                </div>
               )}
               {step === 2 && (
                 <Button
-                  className="w-full mt-4"
+                  className="w-full mt-6 bg-green-600 hover:bg-green-700 text-white text-base py-6"
                   disabled={!selectedShippingId}
                   onClick={() => setStep(3)}
                 >
-                  ادامه
+                  ادامه <ChevronLeft className="mr-2 h-5 w-5" />
                 </Button>
               )}
             </CardContent>
           </Card>
 
           {/* مرحله ۳: روش پرداخت */}
-          <Card className={step !== 3 ? "opacity-60" : ""}>
-            <CardHeader>
-              <CardTitle>روش پرداخت</CardTitle>
+          <Card className={`border-2 transition-all ${
+            step === 3 ? "border-green-200 shadow-lg shadow-green-50" : "border-neutral-100"
+          }`}>
+            <CardHeader className="bg-gradient-to-r from-green-50 to-white rounded-t-xl">
+              <CardTitle className="flex items-center gap-2 text-lg text-neutral-800">
+                <CreditCard className="h-5 w-5 text-green-600" />
+                روش پرداخت
+              </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-6">
               <div className="space-y-3">
                 <label
-                  className={`flex items-center justify-between border rounded-lg p-4 cursor-pointer transition ${
+                  className={`flex items-center justify-between border-2 rounded-xl p-4 cursor-pointer transition-all ${
                     paymentMethod === "zarinpal"
-                      ? "border-primary bg-primary/5"
-                      : "hover:bg-muted/50"
+                      ? "border-green-500 bg-green-50 shadow-sm"
+                      : "border-neutral-200 hover:border-green-200 hover:bg-neutral-50"
                   }`}
                 >
                   <div>
-                    <p className="font-medium">زرین‌پال</p>
-                    <p className="text-sm text-muted-foreground">پرداخت اینترنتی امن</p>
+                    <p className="font-bold text-neutral-800">زرین‌پال</p>
+                    <p className="text-sm text-neutral-500">پرداخت اینترنتی امن و سریع</p>
                   </div>
                   <input
                     type="radio"
                     name="payment"
                     checked={paymentMethod === "zarinpal"}
                     onChange={() => setPaymentMethod("zarinpal")}
+                    className="h-4 w-4 text-green-600 focus:ring-green-500"
                   />
                 </label>
 
                 <label
-                  className={`flex items-center justify-between border rounded-lg p-4 cursor-pointer transition ${
+                  className={`flex items-center justify-between border-2 rounded-xl p-4 cursor-pointer transition-all ${
                     paymentMethod === "wallet"
-                      ? "border-primary bg-primary/5"
-                      : "hover:bg-muted/50"
+                      ? "border-green-500 bg-green-50 shadow-sm"
+                      : "border-neutral-200 hover:border-green-200 hover:bg-neutral-50"
                   }`}
                 >
                   <div>
-                    <p className="font-medium">کیف پول</p>
-                    <p className="text-sm text-muted-foreground">استفاده از اعتبار موجود</p>
+                    <p className="font-bold text-neutral-800">کیف پول</p>
+                    <p className="text-sm text-neutral-500">استفاده از اعتبار موجود در حساب</p>
                   </div>
+                  <Wallet className="h-5 w-5 text-neutral-400" />
                   <input
                     type="radio"
                     name="payment"
                     checked={paymentMethod === "wallet"}
                     onChange={() => setPaymentMethod("wallet")}
+                    className="h-4 w-4 text-green-600 focus:ring-green-500"
                   />
                 </label>
               </div>
               {step === 3 && (
                 <Button
-                  className="w-full mt-6"
+                  className="w-full mt-6 bg-green-600 hover:bg-green-700 text-white text-base py-6 text-lg"
                   disabled={creatingOrder}
                   onClick={handlePayment}
                 >
-                  {creatingOrder ? "در حال ثبت سفارش..." : "پرداخت نهایی"}
+                  {creatingOrder ? (
+                    <>
+                      <span className="inline-block h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent mr-2"></span>
+                      در حال ثبت سفارش...
+                    </>
+                  ) : (
+                    <>
+                      پرداخت نهایی
+                      <ChevronLeft className="mr-2 h-5 w-5" />
+                    </>
+                  )}
                 </Button>
               )}
             </CardContent>
           </Card>
         </div>
 
-        {/* ستون خلاصه سفارش */}
+        {/* ===== ستون خلاصه سفارش ===== */}
         <div>
-          <Card>
-            <CardHeader>
-              <CardTitle>خلاصه سفارش</CardTitle>
+          <Card className="sticky top-24 border-2 border-neutral-200 shadow-xl">
+            <CardHeader className="bg-gradient-to-r from-neutral-50 to-white rounded-t-xl">
+              <CardTitle className="flex items-center gap-2 text-lg text-neutral-800">
+                <ShoppingBag className="h-5 w-5 text-green-600" />
+                خلاصه سفارش
+              </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex justify-between">
-                <span>جمع کالا</span>
-                <span>{cart.subtotal.toLocaleString()} ریال</span>
+            <CardContent className="space-y-4 pt-6">
+              <div className="flex justify-between text-base">
+                <span className="text-neutral-600">جمع کالاها</span>
+                <span className="font-bold text-neutral-800">{formatPrice(cart.subtotal)}</span>
               </div>
-              <div className="flex justify-between">
-                <span>تعداد بسته</span>
-                <span>{cart.totalBoxes}</span>
+              <div className="flex justify-between text-sm text-neutral-500">
+                <span>تعداد بسته‌ها</span>
+                <span>{cart.totalBoxes} عدد</span>
               </div>
-              <div className="flex justify-between">
+              <div className="flex justify-between text-sm text-neutral-500">
                 <span>وزن کل</span>
                 <span>{cart.totalWeight} گرم</span>
               </div>
-              <hr />
-              <div className="flex justify-between font-semibold">
-                <span>هزینه ارسال</span>
-                <span>{shippingCost.toLocaleString()} ریال</span>
+              <hr className="border-dashed" />
+              <div className="flex justify-between text-base">
+                <span className="text-neutral-600">هزینه ارسال</span>
+                <span className="font-bold text-green-700">{formatPrice(shippingCost)}</span>
               </div>
-              <div className="flex justify-between text-lg font-bold text-primary">
-                <span>مبلغ قابل پرداخت</span>
-                <span>{total.toLocaleString()} ریال</span>
+              <hr className="border-2 border-green-200" />
+              <div className="flex justify-between text-xl font-extrabold">
+                <span className="text-neutral-800">مبلغ قابل پرداخت</span>
+                <span className="text-green-700">{formatPrice(total)}</span>
               </div>
               <Button
-                className="w-full mt-4"
+                className="w-full mt-4 bg-green-600 hover:bg-green-700 text-white text-base py-6"
                 onClick={() => setStep(3)}
                 disabled={step === 3}
               >
-                پرداخت
+                {step === 3 ? "در مرحله پرداخت هستید" : "پرداخت"}
               </Button>
             </CardContent>
           </Card>
