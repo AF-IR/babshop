@@ -9,12 +9,28 @@ import { PageLoader } from "@/components/ui/page-loader"
 import { useAuthGuard } from "@/hooks/use-auth-guard"
 import { getOrders } from "@/lib/orders"
 import { Badge } from "@/components/ui/badge"
+import { formatPrice, formatDate } from "@/lib/utils"
+
+// تابع برای دریافت رنگ وضعیت
+function getStatusColor(status: string): string {
+  const statusMap: Record<string, string> = {
+    delivered: "bg-green-600 text-white",        // تحویل شده ✅
+    paid: "bg-green-600 text-white",             // پرداخت شده ✅
+    processing: "bg-blue-500 text-white",        // در حال پردازش 🔵
+    pending: "bg-yellow-500 text-white",         // در انتظار پرداخت 🟡
+    cancelled: "bg-red-600 text-white",          // لغو شده ❌
+    failed: "bg-red-600 text-white",             // ناموفق ❌
+    shipped: "bg-purple-500 text-white",         // ارسال شده 🟣
+  }
+  return statusMap[status.toLowerCase()] || "bg-neutral-500 text-white"
+}
 
 // تابع برای ترجمه وضعیت سفارش
 function getPersianStatus(status: string): string {
   const statusMap: Record<string, string> = {
     pending: "در انتظار پرداخت",
     processing: "در حال پردازش",
+    paid: "پرداخت شده",
     shipped: "ارسال شده",
     delivered: "تحویل داده شده",
     cancelled: "لغو شده",
@@ -72,17 +88,17 @@ export default function OrdersPage() {
                 <div className="flex items-start justify-between">
                   <div>
                     <p className="font-bold text-neutral-800 text-lg">{order.order_number}</p>
-                    <div className="flex items-center gap-3 mt-1">
-                      <Badge className="bg-red-600 text-white text-xs px-3 py-0.5">
+                    <div className="flex items-center gap-3 mt-1 flex-wrap">
+                      <Badge className={`${getStatusColor(order.status)} text-xs px-3 py-0.5 border-0`}>
                         {getPersianStatus(order.status)}
                       </Badge>
                       <span className="text-sm text-neutral-500">
-                        {new Date(order.created_at).toLocaleDateString("fa-IR")}
+                        {formatDate(order.created_at)}
                       </span>
                     </div>
                   </div>
-                  <p className="text-lg font-bold text-red-600">
-                    {order.total.toLocaleString()} ریال
+                  <p className="text-lg font-bold text-green-700">
+                    {formatPrice(order.total)}
                   </p>
                 </div>
               </CardContent>
