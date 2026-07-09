@@ -189,17 +189,17 @@ export function Footer() {
         <div className="flex flex-col-reverse items-center justify-between gap-4 sm:flex-row">
           {/* کپی‌رایت */}
           <p className="text-xs text-neutral-400 text-center sm:text-right">
-            &copy; {currentYear} {siteConfig.name}. تمامی حقوق محفوظ است.
+            &copy; {currentYear} {siteConfig.name}.  تمامی حقوق محفوظ است ارزان پلاست.
             <br className="sm:hidden" />
             <span className="hidden sm:inline"> — </span>
             طراحی شده توسط{" "}
             <a
-              href="https://epicdesignlabs.com"
+              href="arsham.fazel@gmail.com"
               target="_blank"
               rel="noopener noreferrer"
               className="text-neutral-500 underline transition-colors hover:text-red-600"
             >
-              Epic Design Labs
+              Arsham Fazel
             </a>
           </p>
 
