@@ -28,6 +28,7 @@ export default function AddressesPage() {
   })
   const [addresses, setAddresses] = useState<Address[]>([])
 
+  
   // همه هوک‌ها قبل از return شرطی
   useEffect(() => {
     if (!isReady) return
